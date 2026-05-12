@@ -14,3 +14,12 @@
 [submodule "src/external_dependencies/fanuc"]
 	path = src/external_dependencies/fanuc
 	url = https://github.com/PickNikRobotics/fanuc.git
+# ros2_robotiq_gripper override. The apt-installed ros-humble-robotiq-description
+# in the Pro base image lags behind upstream — its robotiq_gripper macro doesn't
+# accept the `mock_sensor_commands` param that kortex_description's
+# robotiq_2f_85_macro.xacro passes. Pinning a recent SHA of PickNik's fork here
+# (and listing robotiq_description in colcon-defaults' allow-overriding) shadows
+# the apt version with one that has the param.
+[submodule "src/external_dependencies/ros2_robotiq_gripper"]
+	path = src/external_dependencies/ros2_robotiq_gripper
+	url = https://github.com/PickNikRobotics/ros2_robotiq_gripper.git
