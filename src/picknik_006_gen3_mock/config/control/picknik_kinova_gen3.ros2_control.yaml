@@ -29,8 +29,8 @@ controller_manager:
       type: joint_velocity_controller/JointVelocityController
 
     # Force-torque sensor at the Kinova wrist; consumed by JTAC + VFC.
-    force_torque_sensor_broadcaster:
-      type: force_torque_sensor_broadcaster/ForceTorqueSensorBroadcaster
+    # force_torque_sensor_broadcaster:
+    #   type: force_torque_sensor_broadcaster/ForceTorqueSensorBroadcaster
 
 
 joint_trajectory_controller:
@@ -100,20 +100,16 @@ robotiq_gripper_controller:
 joint_trajectory_admittance_controller:
   ros__parameters:
     planning_group_name: manipulator
-    sensor_frame: fts_link
+    sensor_frame: end_effector_link
     ee_frame: grasp_link
-    ft_sensor_name: fts
     default_path_tolerance: 0.5
     stop_accelerations: [3.0, 3.0, 3.0, 3.0, 5.0, 5.0, 5.0]
 
 velocity_force_controller:
   ros__parameters:
     planning_group_name: manipulator
-    sensor_frame: fts_link
+    sensor_frame: end_effector_link
     ee_frame: grasp_link
-    ft_sensor_name: fts
-    ft_force_deadband: 2.0
-    ft_torque_deadband: 1.0
     max_joint_velocity:
       - 0.524
       - 0.524
@@ -172,14 +168,14 @@ joint_velocity_controller:
     # Hz at which the controller publishes state.
     state_publish_rate: 20
 
-force_torque_sensor_broadcaster:
-  ros__parameters:
-    sensor_name: fts
-    state_interface_names:
-      - force.x
-      - force.y
-      - force.z
-      - torque.x
-      - torque.y
-      - torque.z
-    frame_id: fts_link
+# force_torque_sensor_broadcaster:
+#   ros__parameters:
+#     sensor_name: fts
+#     state_interface_names:
+#       - force.x
+#       - force.y
+#       - force.z
+#       - torque.x
+#       - torque.y
+#       - torque.z
+#     frame_id: fts_link

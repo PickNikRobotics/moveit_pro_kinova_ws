@@ -32,13 +32,13 @@ hardware:
       - gripper: "robotiq_2f_85"
       - gripper_joint_name: "robotiq_85_left_knuckle_joint"
       - use_internal_bus_gripper_comm: "true"
-      - wrist_realsense: "true"
+      - wrist_realsense: "false"
 
 ros2_control:
   # Re-add the gripper controller (sim drops it) plus the Kinova fault
   # controller (mock skips it because there are no real faults to clear).
   controllers_active_at_startup:
-    - "force_torque_sensor_broadcaster"
+    # - "force_torque_sensor_broadcaster"
     - "robotiq_gripper_controller"
     - "joint_state_broadcaster"
     - "fault_controller"

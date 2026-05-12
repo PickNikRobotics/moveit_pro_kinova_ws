@@ -1,55 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <root BTCPP_format="4" main_tree_to_execute="Quest Teleop">
-  <!--Quest Teleop
-
-    Clutch-based teleoperation driven by a Meta Quest controller. The kinematic
-    math snapshots the grasp pose and controller pose on grip press, then applies
-    the controller delta — composed in the quest frame — as a world-frame delta
-    on the EE.
-
-    Architectural notes:
-      * The quest and world TF frames are disjoint roots. We never transform
-        between them. On grip press we snapshot both anchors — the controller
-        pose in quest, and the grasp_link pose in world. While grip is held,
-        we compute the controller's current pose relative to its clutch-time
-        pose (a relative rigid-body transform with no frame attachment) and
-        apply that same transform to the grasp_link's clutch-time pose. The
-        result is a target pose in world. No frame crossing is needed.
-      * GetOdomInstance is used for one-shot snapshots that must not race
-        with downstream math (it blocks until a fresh message arrives).
-      * GetOdom is used as a producer in the inner Parallel — long-lived
-        subscription, writes the latest cached value to the blackboard
-        every tick. We seed {controller_pose} from the snapshot to avoid
-        a cold-start race in the consumer's first tick.
-
-    Customization:
-      This is intentionally a single flat tree — there are no SubTree files to
-      copy alongside it. Each button event has a slot whose default action is
-      `AlwaysSuccess`; replace those `AlwaysSuccess` actions with your own
-      logic (publish a string, toggle the gripper, run a sub-objective, etc.)
-      to customize. The button-event branches show the pattern; mirror it to
-      add handlers for buttons not currently wired (e.g. /*_menu_button_event).
-
-    Slots in this file (all default to `AlwaysSuccess` — replace inline):
-      Right A button event handler
-      Right B button event handler
-      Right trigger button event handler
-      Left B button event handler
-      Left trigger button event handler
-      Per-tick teleop slot (rate-limited, runs while grip is held)
-
-    Non-slot fixed behavior:
-      Initialization        — open the gripper and seed `gripper_open := true`.
-      Grip cycle            — snapshot poses, run velocity-tracking loop until release.
-
-    Notes:
-      * The grip button drives the teleop session itself; do not bolt extra
-        behavior onto its press/release — they're load-bearing.
-      * The left A button is intentionally NOT subscribed: the Quest app binds
-        it to its on-headset keyboard for editing the host's IP address (see
-        ROSPublishers.cs `_keyboardAction = FindAndEnableAction("OpenKeyboard")`),
-        so subscribing to /left_a_button_event would race with the Quest's
-        local keyboard handling.-->
   <BehaviorTree
     ID="Quest Teleop"
     _description="Clutch-based teleoperation driven by a Meta Quest controller. Grip press snapshots the grasp + controller poses; the controller delta in the quest frame is applied as a world-frame delta on the EE until grip release. Per-button slot actions default to AlwaysSuccess; replace inline to customize."
@@ -65,23 +15,31 @@
         <Action ID="Script" code="gripper_open := true" />
         <Action
           ID="CreateStampedPose"
+          name="Basis-change rotation R (Quest FLU → IMarker EE)"
           stamped_pose="{basis_change_pose}"
           reference_frame="quest"
           orientation_xyzw="-0.5;-0.5;-0.5;0.5"
-          name="Basis-change rotation R (Quest FLU → IMarker EE)"
+          position_xyz="0.000000;0.000000;0.000000"
         />
       </Control>
       <Action
         ID="SwitchController"
-        activate_controllers="velocity_force_controller"
         name="Switch to VFC"
+        activate_controllers="velocity_force_controller"
         automatic_deactivation="true"
+        controller_switch_action_name="/controller_manager/switch_controller"
+        timeout="-1.000000"
+        activate_asap="true"
+        strictness="1"
+        controller_list_action_name="/controller_manager/list_controllers"
+        automatic_activation="true"
+        deactivate_controllers=""
       />
       <Control
         ID="Parallel"
+        name="Top-level event branches + grip-driven teleop session"
         failure_count="1"
         success_count="-1"
-        name="Top-level event branches + grip-driven teleop session"
       >
         <!--Top-level button event handlers: fire whenever, independent of grip state.-->
         <Decorator
@@ -93,12 +51,14 @@
               ID="GetEmptyInstance"
               empty_topic_name="/right_a_button_event"
               message_count="{a_message_count}"
+              message_received="{message_received}"
             />
             <Action
               ID="PublishString"
               message="Starting demonstration"
               topic="/demonstration_indicator"
               use_best_effort="false"
+              queue_size="1"
             />
           </Control>
         </Decorator>
@@ -111,12 +71,14 @@
               ID="GetEmptyInstance"
               empty_topic_name="/right_b_button_event"
               message_count="{b_message_count}"
+              message_received="{message_received}"
             />
             <Action
               ID="PublishString"
               message="Stopping demonstration"
               topic="/demonstration_indicator"
               use_best_effort="false"
+              queue_size="1"
             />
           </Control>
         </Decorator>
@@ -129,6 +91,7 @@
               ID="GetEmptyInstance"
               empty_topic_name="/right_trigger_button_event"
               message_count="{trigger_message_count}"
+              message_received="{message_received}"
             />
             <!--Slot: replace with your own action (e.g. toggle gripper_open and
                  PublishBool to /gripper_button for the documented gripper-trigger architecture).-->
@@ -146,6 +109,7 @@
               ID="GetEmptyInstance"
               empty_topic_name="/left_b_button_event"
               message_count="{left_b_message_count}"
+              message_received="{message_received}"
             />
             <!--Slot: replace with your own action.-->
             <Action ID="AlwaysSuccess" />
@@ -160,34 +124,52 @@
               ID="GetEmptyInstance"
               empty_topic_name="/left_trigger_button_event"
               message_count="{left_trigger_message_count}"
+              message_received="{message_received}"
             />
             <!--Reset shortcut: yield the arm hardware from VFC, drive the joints to
                  the "Home" waypoint, then hand control back to VFC so the grip teleop
                  loop can resume.-->
             <Action
               ID="SwitchController"
+              name="Switch to JTAC for waypoint motion"
               activate_controllers="joint_trajectory_admittance_controller"
               automatic_deactivation="true"
-              name="Switch to JTAC for waypoint motion"
+              controller_switch_action_name="/controller_manager/switch_controller"
+              timeout="-1.000000"
+              activate_asap="true"
+              strictness="1"
+              controller_list_action_name="/controller_manager/list_controllers"
+              automatic_activation="true"
+              deactivate_controllers=""
             />
             <SubTree
               ID="Move to Waypoint"
               name="Move to Home"
               _collapsed="true"
               joint_group_name="manipulator"
-              waypoint_name="Home"
+              waypoint_name="Demonstration Home"
               acceleration_scale_factor="1.0"
               controller_action_server="/joint_trajectory_admittance_controller/follow_joint_trajectory"
               controller_names="joint_trajectory_admittance_controller"
               execution_pipeline="jtac"
               keep_orientation="false"
               keep_orientation_tolerance="0.05"
+              link_padding="0.01"
+              seed="0"
+              velocity_scale_factor="1.0"
             />
             <Action
               ID="SwitchController"
+              name="Switch back to VFC"
               activate_controllers="velocity_force_controller"
               automatic_deactivation="true"
-              name="Switch back to VFC"
+              controller_switch_action_name="/controller_manager/switch_controller"
+              timeout="-1.000000"
+              activate_asap="true"
+              strictness="1"
+              controller_list_action_name="/controller_manager/list_controllers"
+              automatic_activation="true"
+              deactivate_controllers=""
             />
           </Control>
         </Decorator>
@@ -195,25 +177,40 @@
         <Decorator ID="KeepRunningUntilFailure" name="Grip teleop session loop">
           <Control ID="Sequence" name="One grip cycle">
             <Control ID="Sequence" name="Zero twist/wrench before each cycle">
-              <Action ID="CreateStampedWrench" />
-              <Action ID="CreateStampedTwist" reference_frame="world" />
+              <Action
+                ID="CreateStampedWrench"
+                stamped_wrench="{stamped_wrench}"
+                torque_xyz="0.000000;0.000000;0.000000"
+                force_xyz="0.000000;0.000000;0.000000"
+                reference_frame="world"
+              />
+              <Action
+                ID="CreateStampedTwist"
+                reference_frame="world"
+                stamped_twist="{stamped_twist}"
+                angular_velocity_xyz="0.000000;0.000000;0.000000"
+                linear_velocity_xyz="0.000000;0.000000;0.000000"
+              />
             </Control>
             <Action
               ID="GetEmptyInstance"
-              empty_topic_name="/right_grip_button_event"
               name="Block until grip pressed"
+              empty_topic_name="/right_grip_button_event"
+              message_received="{message_received}"
+              message_count="{message_count}"
             />
-            <Action ID="LogMessage" message="grip event" />
+            <Action ID="LogMessage" message="grip event" log_level="info" />
             <Control
               ID="Sequence"
               name="Snapshot grasp_link and controller poses (one-shot, must not race CalculatePoseOffset)"
             >
               <Action
                 ID="CreateStampedPose"
+                name="Identity pose at grasp_link"
                 stamped_pose="{initial_grasp_pose}"
                 reference_frame="grasp_link"
                 orientation_xyzw="0;0;0;1"
-                name="Identity pose at grasp_link"
+                position_xyz="0.000000;0.000000;0.000000"
               />
               <Action
                 ID="TransformPoseFrame"
@@ -227,12 +224,13 @@
                 marker_name="initial grasp pose"
                 marker_size="0.100000"
                 marker_text="i_g"
+                marker_lifetime="0.000000"
               />
               <Action
                 ID="GetOdomInstance"
+                name="Snapshot controller odom (one-shot, blocks for fresh message)"
                 odom_topic_name="/right_controller_odom"
                 subscribed_odom_instance="{snapshot_odometry}"
-                name="Snapshot controller odom (one-shot, blocks for fresh message)"
               />
               <Action
                 ID="ConvertOdomToPoseStamped"
@@ -257,15 +255,17 @@
                 pose="{initial_controller_pose}"
                 marker_name="initial controller pose"
                 marker_text="i_c"
+                marker_lifetime="0.000000"
+                marker_size="0.100000"
               />
               <!--Seed the inner-loop consumer's input from the same snapshot
                    so its first tick computes delta = identity, before GetOdom
                    has had a chance to write a fresh value.-->
               <Action
                 ID="ConvertOdomToPoseStamped"
+                name="Seed controller_pose from snapshot to avoid cold-start race"
                 odometry="{snapshot_odometry}"
                 pose_stamped="{controller_pose}"
-                name="Seed controller_pose from snapshot to avoid cold-start race"
               />
               <!--Seed grip_held = true so the release detector below doesn't trip on tick 1
                    before GetBool's subscription has received its first sample.-->
@@ -273,9 +273,9 @@
             </Control>
             <Control
               ID="Parallel"
+              name="Inner teleop: producer + consumer + publisher + tick slot + release detector"
               failure_count="1"
               success_count="1"
-              name="Inner teleop: producer + consumer + publisher + tick slot + release detector"
             >
               <!--Producer: long-lived subscription, writes latest controller pose every tick.
                    Returns RUNNING forever; halted by parallel when release detector returns SUCCESS.
@@ -284,10 +284,10 @@
                    on the first onRunning tick.-->
               <Action
                 ID="GetOdomLatest"
+                name="GetOdomLatest producer (controller pose stream)"
                 odometry_topic_name="/right_controller_odom"
                 subscribed_odometry="{controller_odometry}"
                 odometry_pose="{controller_pose}"
-                name="GetOdomLatest producer (controller pose stream)"
               />
               <!--Consumer: reads {controller_pose} from blackboard, computes velocity command.-->
               <Decorator
@@ -321,18 +321,22 @@
                        sense (unit-quaternion inverse = (-x,-y,-z, w)).-->
                   <Action
                     ID="TransformPoseWithPose"
+                    name="Conjugate step 1: pose_transform := R · pose_transform"
                     input_pose="{pose_transform}"
                     transform_pose="{basis_change_pose}"
                     output_pose="{pose_transform}"
-                    name="Conjugate step 1: pose_transform := R · pose_transform"
                   />
                   <Action
                     ID="TransformPose"
+                    name="Conjugate step 2: pose_transform := pose_transform · R⁻¹"
                     input_pose="{pose_transform}"
                     translation_xyz="0;0;0"
                     quaternion_xyzw="0.5;0.5;0.5;0.5"
                     output_pose="{pose_transform}"
-                    name="Conjugate step 2: pose_transform := pose_transform · R⁻¹"
+                    marker_lifetime="0.000000"
+                    marker_size="0.100000"
+                    marker_text=""
+                    visualize_pose="false"
                   />
                   <Action
                     ID="PoseToVectors"
@@ -342,11 +346,15 @@
                   />
                   <Action
                     ID="TransformPose"
+                    name="Apply controller delta to initial grasp pose"
                     quaternion_xyzw="{vec_quaternion}"
                     translation_xyz="{vec_position}"
                     input_pose="{initial_grasp_pose}"
                     output_pose="{target_pose}"
-                    name="Apply controller delta to initial grasp pose"
+                    marker_lifetime="0.000000"
+                    marker_size="0.100000"
+                    marker_text=""
+                    visualize_pose="false"
                   />
                   <Action
                     ID="VisualizePose"
@@ -354,6 +362,7 @@
                     marker_name="target"
                     marker_text="target"
                     marker_size="0.1"
+                    marker_lifetime="0.000000"
                   />
                   <!--See the note above the initial-controller-pose VisualizePose call:
                        this marker also lives in the disjoint `quest` frame and depends on
@@ -363,15 +372,21 @@
                     pose="{controller_pose}"
                     marker_name="controller"
                     marker_text="controller"
+                    marker_lifetime="0.000000"
+                    marker_size="0.100000"
                   />
                   <Action
                     ID="ConvertPoseStampedToOdom"
                     pose_stamped="{target_pose}"
                     odom="{target_odom}"
+                    child_frame=""
                   />
                   <Action
                     ID="CreateStampedPose"
                     stamped_pose="{target_pose_offset}"
+                    orientation_xyzw="0.000000;0.000000;0.000000;1.000000"
+                    position_xyz="0.000000;0.000000;0.000000"
+                    reference_frame="world"
                   />
                   <Action
                     ID="ComputeVelocityToAlignWithTarget"
@@ -380,21 +395,28 @@
                     output_control_velocity="{stamped_twist}"
                     proportional_gain_angular="2.0"
                     proportional_gain_linear="2.0"
+                    end_effector_frame="grasp_link"
+                    output_pose_error="{pose_error}"
                   />
                   <Action
                     ID="CreateStampedWrench"
                     reference_frame="grasp_link"
+                    stamped_wrench="{stamped_wrench}"
+                    torque_xyz="0.000000;0.000000;0.000000"
+                    force_xyz="0.000000;0.000000;0.000000"
                   />
                 </Control>
               </Decorator>
               <Action
                 ID="PublishVelocityForceCommand"
+                name="Publish twist/wrench at 50 Hz"
                 twist_stamped="{stamped_twist}"
                 wrench_stamped="{stamped_wrench}"
                 velocity_controlled_axes="1;1;1;1;1;1"
                 publish_rate="100"
                 wrench_gain="0.0"
-                name="Publish twist/wrench at 50 Hz"
+                force_controlled_axes="0;0;0;0;0;0"
+                velocity_force_controller_command_topic="/velocity_force_controller/command"
               />
               <!--User per-tick slot, rate-limited to ~10 Hz so user code can't gate the velocity loop.
                    To change the rate, edit the WaitForDuration below.-->
@@ -414,15 +436,15 @@
                    Precondition can read it directly.-->
               <Action
                 ID="GetBool"
+                name="GetBool producer (grip held state)"
                 bool_topic_name="/right_grip_button_state"
                 subscribed_bool="{grip_held}"
-                name="GetBool producer (grip held state)"
               />
               <!--Release detector: when {grip_held} flips to false, Precondition fails,
                    KRUF returns FAILURE, Inverter returns SUCCESS, parallel exits.-->
               <Decorator ID="Inverter" name="Return SUCCESS on grip release">
                 <Decorator ID="KeepRunningUntilFailure">
-                  <Decorator ID="Precondition" if="grip_held">
+                  <Decorator ID="Precondition" if="grip_held" else="FAILURE">
                     <Action ID="AlwaysSuccess" />
                   </Decorator>
                 </Decorator>

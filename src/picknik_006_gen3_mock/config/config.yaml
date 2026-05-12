@@ -21,7 +21,7 @@ hardware:
 
   # Specify additional launch files for running the robot with real hardware.
   # [Optional, defaults to a blank launch file if not specified]
-  robot_driver_persist_launch_file:
+  simulated_robot_driver_persist_launch_file:
     package: "picknik_006_gen3_mock"
     path: "launch/robot_drivers_to_persist.launch.py"
 
@@ -43,7 +43,7 @@ hardware:
       - arm: "gen3"
       - dof: "7"
       # Enable the Kinova-integrated wrist Vision Module.
-      - vision: "true"
+      - vision: "false"
       - robot_ip: ""
       - username: "admin"
       - password: "admin"
@@ -58,7 +58,7 @@ hardware:
       - gripper_joint_name: "robotiq_85_left_knuckle_joint"
       - use_internal_bus_gripper_comm: "true"
       # Externally-mounted RealSense at the wrist.
-      - wrist_realsense: "true"
+      - wrist_realsense: "false"
 
 # This Configures moveit params that are in moveit_config.py
 moveit_params:
@@ -99,7 +99,7 @@ ros2_control:
     path: "config/control/picknik_kinova_gen3.ros2_control.yaml"
   # Load and start these controllers so they can be used immediately.
   controllers_active_at_startup:
-    - "force_torque_sensor_broadcaster"
+    # - "force_torque_sensor_broadcaster"
     - "joint_state_broadcaster"
     - "robotiq_gripper_controller"
   controllers_inactive_at_startup:

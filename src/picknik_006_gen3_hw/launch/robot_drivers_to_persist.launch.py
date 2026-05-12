@@ -27,6 +27,7 @@ def generate_launch_description():
         package="kinova_pstop_manager",
         executable="protective_stop_manager_node",
         name="protective_stop_manager_node",
+        emulate_tty=True,
         output="both",
         parameters=[
             {
@@ -50,12 +51,40 @@ def generate_launch_description():
         name="ros_tcp_endpoint",
         emulate_tty=True,
         parameters=[
-            {"ROS_IP": "192.168.1.34"},
+            {"ROS_IP": "10.6.1.94"},
         ],
-        output="screen",
+        output="both",
     )
 
-    return LaunchDescription([
+    # Debug-only static TF linking the disjoint quest TF root into the robot tree
+    # at the world frame. The numerical values are wrong — quest and world have
+    # no real geometric relationship — but the link satisfies the canTransform()
+    # check inside marker_utils::transformPoseToBaseFrame() so VisualizePose calls
+    # against quest-frame poses (controller markers in v11) can render.
+    #
+    # No control path uses this transform: the v11 kinematic math composes the
+    # controller delta in quest and applies it to the EE in world directly,
+    # bypassing TF entirely. The lie is contained to RViz markers.
+    #
+    # Before shipping v11, remove the quest-frame VisualizePose calls from the
+    # objective and delete this node — neither will be needed.
+    static_tf_world_to_quest = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="static_transform_world_to_quest",
+        emulate_tty=True,
+        output="both",
+        arguments=[
+            "0", "0", "0",  # x y z (identity translation; the link is geometrically meaningless)
+            "0", "0", "0",  # yaw pitch roll
+            "world", "quest",
+        ],
+    )
+
+    nodes_to_launch = [
         protective_stop_manager_node,
         ros_tcp_endpoint_node,
-    ])
+        static_tf_world_to_quest,
+    ]
+
+    return LaunchDescription(nodes_to_launch)

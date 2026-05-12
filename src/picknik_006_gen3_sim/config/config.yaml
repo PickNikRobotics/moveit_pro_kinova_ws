@@ -30,6 +30,7 @@ hardware:
       # picknik_006_gen3_mock declares so the URDF matches the scene.
       - gripper: ""
       - wrist_realsense: "false"
+      - vision: "false"
 
 ros2_control:
   # MuJoCo has no gripper to drive; trim the inherited active-controllers list.
