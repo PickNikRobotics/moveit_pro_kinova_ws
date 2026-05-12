@@ -23,3 +23,8 @@
 [submodule "src/external_dependencies/ros2_robotiq_gripper"]
 	path = src/external_dependencies/ros2_robotiq_gripper
 	url = https://github.com/PickNikRobotics/ros2_robotiq_gripper.git
+# serial is a transitive build dep of robotiq_driver; dropped from rosdep on
+# humble so we vendor tylerjw/serial (the same fork moveit_pro_ur_ws uses).
+[submodule "src/external_dependencies/serial"]
+	path = src/external_dependencies/serial
+	url = https://github.com/tylerjw/serial.git
