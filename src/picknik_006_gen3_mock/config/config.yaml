@@ -26,14 +26,10 @@ hardware:
     path: "launch/robot_drivers_to_persist.launch.py"
 
   # Specify any additional launch files for running the robot in simulation mode.
-  # Used when hardware.simulated is True.
+  # Used when hardware.simulated is True. _mock uses ros2_control mock_components
+  # and doesn't need anything extra in the persist launch — the default blank
+  # launch is fine. picknik_006_gen3_sim overrides this to bring up MuJoCo.
   # [Optional, defaults to a blank launch file if not specified]
-  simulated_robot_driver_persist_launch_file:
-    package: "picknik_006_gen3_mock"
-    path: "launch/sim/robot_drivers_to_persist_sim.launch.py"
-  simulated_hardware_launch_file:
-    package: "moveit_studio_agent"
-    path: "launch/blank.launch.py"
 
   # These Params are pasted to the XACRO to create the URDF
   robot_description:
