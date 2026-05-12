@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
 <package format="3">
-  <name>kinova_gen3_mock</name>
+  <name>picknik_006_gen3_mock</name>
   <version>6.5.0</version>
 
-  <description>Mock-hardware boilerplate configuration for a Kinova Gen3 7DoF arm with the integrated wrist Vision Module. No gripper or external sensors are mounted.</description>
+  <description>Trunk configuration for the picknik_006_gen3 asset (Kinova Gen3 7DoF + Robotiq 2F-85 + wrist RealSense D415). The mock variant runs ros2_control fake hardware; picknik_006_gen3_sim and picknik_006_gen3_hw inherit from this package.</description>
 
   <maintainer email="david.yackzan@picknik.ai">David Yackzan</maintainer>
   <maintainer email="paul.gesel@picknik.ai">Paul Gesel</maintainer>
@@ -19,6 +19,8 @@
   <exec_depend>moveit_studio_agent</exec_depend>
   <exec_depend>moveit_pro_behavior</exec_depend>
   <exec_depend>picknik_accessories</exec_depend>
+  <exec_depend>realsense2_description</exec_depend>
+  <exec_depend>robotiq_description</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>

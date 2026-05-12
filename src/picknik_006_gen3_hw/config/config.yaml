@@ -1,0 +1,55 @@
+###############################################################
+#
+#  MoveIt Pro robot configuration: picknik_006_gen3 on real hardware
+#  (Kinova Gen3 7DoF + Robotiq 2F-85 + wrist-mounted RealSense D415).
+#
+#  Inherits from picknik_006_gen3_sim (which inherits from
+#  picknik_006_gen3_mock). The sim layer overrides urdf_params to drop the
+#  gripper + wrist RealSense so the bare-arm MuJoCo scene applies; this
+#  layer re-enables both for the real arm, along with real-hardware
+#  overrides (real Kortex driver, robot_ip, use_fake_hardware=false) and
+#  the robotiq_gripper_controller / fault_controller.
+#
+#  Adjust robot_ip below for your robot.
+#
+###############################################################
+
+based_on_package: "picknik_006_gen3_sim"
+
+hardware:
+  simulated: False
+
+  robot_driver_persist_launch_file:
+    package: "picknik_006_gen3_hw"
+    path: "launch/robot_drivers_to_persist.launch.py"
+
+  robot_description:
+    urdf_params:
+      - robot_ip: "192.168.1.10"
+      - use_fake_hardware: "false"
+      - fake_sensor_commands: "false"
+      # Re-enable what picknik_006_gen3_sim disabled for MuJoCo.
+      - gripper: "robotiq_2f_85"
+      - gripper_joint_name: "robotiq_85_left_knuckle_joint"
+      - use_internal_bus_gripper_comm: "true"
+      - wrist_realsense: "true"
+
+ros2_control:
+  # Re-add the gripper controller (sim drops it) plus the Kinova fault
+  # controller (mock skips it because there are no real faults to clear).
+  controllers_active_at_startup:
+    - "force_torque_sensor_broadcaster"
+    - "robotiq_gripper_controller"
+    - "joint_state_broadcaster"
+    - "fault_controller"
+
+moveit_params:
+  joint_limits:
+    package: "picknik_006_gen3_hw"
+    path: "config/moveit/joint_limits.yaml"
+  pose_jog:
+    package: "picknik_006_gen3_hw"
+    path: "config/moveit/pose_jog.yaml"
+  joint_jog:
+    package: "picknik_006_gen3_hw"
+    path: "config/moveit/joint_jog.yaml"

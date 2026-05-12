@@ -1,32 +1,45 @@
-# moveit_pro_kinova_ws
+# moveit_pro_kinova_ws — `picknik_006_gen3` branch
 
-This is a [MoveIt Pro](https://picknik.ai/pro) robot workspace for Kinova Gen3 7DoF arms.
+This branch holds the [MoveIt Pro](https://picknik.ai/pro) robot configuration
+for the **picknik_006_gen3** asset: a Kinova Gen3 7DoF arm + Robotiq 2F-85
+(via the Kinova internal bus) + a wrist-mounted RealSense D415. The
+arm-integrated Vision Module is also enabled.
 
-Refer to the [Kinova Gen3 Hardware Setup Guide](https://docs.picknik.ai/hardware_guides/robot_arms/kinova_hardware_setup_guide/) for installation.
+Refer to the [Kinova Gen3 Hardware Setup Guide](https://docs.picknik.ai/hardware_guides/robot_arms/kinova_hardware_setup_guide/)
+for installation.
 
-## Included configurations
+## Asset-ID naming
 
-The `main` branch ships a boilerplate Kinova Gen3 7DoF arm with the
-arm-integrated Vision Module wrist camera and no gripper. The three
-configurations form an inheritance chain (per
-[robot_and_objective_inheritance](https://docs.picknik.ai/how_to/configuration_tutorials/robot_and_objective_inheritance/)):
+Per the [robot config naming guidance](https://docs.picknik.ai/how_to/configuration_tutorials/robot_and_objective_inheritance/#robot-naming-conventions),
+this branch's packages carry the `picknik_006_gen3_` prefix to mark them as
+the configuration of a specific physical robot. New asset-ID branches should
+fork `main` (which holds the bare-arm boilerplate `kinova_gen3_{mock,sim,hw}`)
+rather than this one.
+
+## Configurations on this branch
 
 ```
-kinova_gen3_mock  →  kinova_gen3_sim  →  kinova_gen3_hw
+picknik_006_gen3_mock  →  picknik_006_gen3_sim  →  picknik_006_gen3_hw
 ```
 
-- `kinova_gen3_mock` — bare arm with `ros2_control` mock hardware. Owns the
-  shared URDF, SRDF, MoveIt configuration, ros2_control config, and Objectives.
-- `kinova_gen3_sim` — MuJoCo-simulated arm. Inherits everything from
-  `kinova_gen3_mock`; only adds the MuJoCo scene and simulator launch file.
-- `kinova_gen3_hw` — real Kinova Kortex hardware. Inherits from
-  `kinova_gen3_sim`; only overrides `simulated`, `robot_ip`, and the hardware
-  driver launch file. Set `robot_ip` for your robot before running.
-- `kinova_pstop_manager` — helper node for Kortex protective-stop events,
-  loaded by the `_hw` driver launch.
+- `picknik_006_gen3_mock` — trunk. Carries the URDF (arm + Robotiq 2F-85 +
+  wrist RealSense + integrated Vision Module), SRDF, MoveIt configuration,
+  and `ros2_control` config that the other two inherit. Runs ros2_control
+  fake hardware so you can dev-test gripper and motion workflows without a
+  physical arm.
+- `picknik_006_gen3_sim` — MuJoCo. Inherits from `_mock` and overrides
+  `urdf_params` to drop the gripper and wrist RealSense, so the URDF matches
+  the bare-arm `description/mujoco/scene.xml` carried over from `main`. Use
+  this for motion-only sim validation.
+- `picknik_006_gen3_hw` — real hardware. Inherits from `_sim` and overrides
+  `simulated`, `robot_ip`, `use_fake_hardware`, the driver launch file, and
+  the `controllers_active_at_startup` list. Re-enables the gripper and wrist
+  RealSense and uncomments the `cameras.launch.xml` include for the wrist
+  RealSense driver. Set `robot_ip` to your robot's IP before running.
+- `kinova_pstop_manager` — protective-stop helper, used by `_hw`.
 
-Add-ons such as a Robotiq gripper, an external RealSense, or full demos belong
-on their own branches that diverge from this boilerplate. See:
+## Relation to `main`
 
-- `space-satellite` — full satellite manipulation demo with Robotiq, external
-  RealSense, AprilTag tracking, and Fuse state estimation.
+This branch does not merge back into `main`. `main` holds the bare-arm
+boilerplate (`kinova_gen3_mock` → `kinova_gen3_sim` → `kinova_gen3_hw`); use
+that as the reference when starting a new asset-ID branch.

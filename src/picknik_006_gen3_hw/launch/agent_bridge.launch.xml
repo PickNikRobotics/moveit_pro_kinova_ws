@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<launch>
+  <include
+    file="$(find-pkg-share moveit_studio_agent)/launch/studio_agent_bridge.launch.xml"
+  />
+  <!-- picknik_006_gen3 has the externally-mounted wrist RealSense. -->
+  <include file="$(find-pkg-share picknik_006_gen3_hw)/launch/cameras.launch.xml" />
+</launch>

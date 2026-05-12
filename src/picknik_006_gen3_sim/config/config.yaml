@@ -1,0 +1,37 @@
+###############################################################
+#
+#  MoveIt Pro robot configuration: bare-arm Kinova Gen3 7DoF in MuJoCo.
+#  Inherits from picknik_006_gen3_mock; overrides urdf_params to drop the
+#  Robotiq and wrist RealSense so the URDF matches the existing bare-arm
+#  MuJoCo scene (description/mujoco/scene.xml). picknik_006_gen3_hw inherits
+#  from this package and re-enables the gripper + wrist RealSense for the
+#  real robot.
+#
+###############################################################
+
+based_on_package: "picknik_006_gen3_mock"
+
+hardware:
+  # Use the MuJoCo simulator backend.
+  simulated: True
+
+  # Bring up MuJoCo as the "robot driver" while running in simulation mode.
+  simulated_robot_driver_persist_launch_file:
+    package: "picknik_006_gen3_sim"
+    path: "launch/sim/robot_drivers_to_persist_sim.launch.py"
+
+  robot_description:
+    urdf_params:
+      - mujoco_keyframe: "default"
+      - mujoco_model: "description/mujoco/scene.xml"
+      - mujoco_viewer: false
+      - use_fake_hardware: "%>> hardware.simulated"
+      # MuJoCo scene is the bare arm. Drop the gripper + wrist RealSense that
+      # picknik_006_gen3_mock declares so the URDF matches the scene.
+      - gripper: ""
+      - wrist_realsense: "false"
+
+ros2_control:
+  # MuJoCo has no gripper to drive; trim the inherited active-controllers list.
+  controllers_active_at_startup:
+    - "joint_state_broadcaster"

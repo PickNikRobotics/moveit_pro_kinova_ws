@@ -1,12 +1,13 @@
 <?xml version="1.0" ?>
 <package format="3">
-  <name>kinova_gen3_sim</name>
+  <name>picknik_006_gen3_sim</name>
   <version>6.5.0</version>
 
   <description>
-    MuJoCo-simulation configuration for a Kinova Gen3 7DoF arm. Inherits the
-    URDF, SRDF, and MoveIt configuration from kinova_gen3_mock; only the MuJoCo
-    scene and simulator launch file are added here.
+    MuJoCo-simulation configuration for the picknik_006_gen3 asset. Inherits
+    URDF, SRDF, MoveIt configuration, and ros2_control from
+    picknik_006_gen3_mock and overrides urdf_params to drop the Robotiq +
+    wrist RealSense so the URDF matches the bare-arm MuJoCo scene.
   </description>
 
   <maintainer email="paul.gesel@picknik.ai">Paul Gesel</maintainer>
@@ -16,7 +17,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>kinova_gen3_mock</depend>
+  <depend>picknik_006_gen3_mock</depend>
 
   <exec_depend>joint_trajectory_admittance_controller</exec_depend>
   <exec_depend>picknik_mujoco_ros</exec_depend>

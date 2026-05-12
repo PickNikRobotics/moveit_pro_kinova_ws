@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.22)
-project(kinova_gen3_sim)
+cmake_minimum_required(VERSION 3.16.3)
+project(picknik_006_gen3_hw)
 
 find_package(ament_cmake REQUIRED)
 
@@ -8,7 +8,6 @@ install(
     config
     description
     launch
-    meshes
     objectives
     waypoints
   DESTINATION

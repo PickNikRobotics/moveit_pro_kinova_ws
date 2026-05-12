@@ -1,4 +1,4 @@
-# kinova_gen3_sim
+# picknik_006_gen3_sim
 
 A MoveIt Pro configuration to simulate a Kinova Gen3 robot using mock hardware with MuJoCo.
 
