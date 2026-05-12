@@ -77,6 +77,12 @@ moveit_params:
   joint_limits:
     package: "picknik_006_gen3_mock"
     path: "config/moveit/joint_limits.yaml"
+  pose_jog:
+    package: "picknik_006_gen3_mock"
+    path: "config/moveit/pose_jog.yaml"
+  joint_jog:
+    package: "picknik_006_gen3_mock"
+    path: "config/moveit/joint_jog.yaml"
 
   publish:
     planning_scene: True
@@ -101,6 +107,9 @@ ros2_control:
     - "robotiq_gripper_controller"
   controllers_inactive_at_startup:
     - "joint_trajectory_controller"
+    - "joint_trajectory_admittance_controller"
+    - "velocity_force_controller"
+    - "joint_velocity_controller"
 
 objectives:
   behavior_loader_plugins:

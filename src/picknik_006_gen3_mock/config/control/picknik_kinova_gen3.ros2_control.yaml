@@ -18,6 +18,16 @@ controller_manager:
     fault_controller:
       type: picknik_reset_fault_controller/PicknikResetFaultController
 
+    # Loaded but inactive at startup; activated by PoseJog / JointJog behaviors.
+    joint_trajectory_admittance_controller:
+      type: joint_trajectory_admittance_controller/JointTrajectoryAdmittanceController
+
+    velocity_force_controller:
+      type: velocity_force_controller/VelocityForceController
+
+    joint_velocity_controller:
+      type: joint_velocity_controller/JointVelocityController
+
 
 joint_trajectory_controller:
   ros__parameters:
