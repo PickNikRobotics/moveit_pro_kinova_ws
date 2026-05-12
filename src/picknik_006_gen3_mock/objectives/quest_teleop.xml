@@ -13,15 +13,24 @@
       <Control ID="Sequence" name="Teleop Init" _collapsed="false">
         <Action
           ID="MoveGripperAction"
-          name="Half open gripper"
+          name="Mostly open (0.05)"
           gripper_command_action_name="/robotiq_gripper_controller/gripper_cmd"
           position="0.05"
           timeout="10.000000"
         />
-        <Action ID="Script" code="gripper_open := true" />
+        <Action ID="Script" code="gripper_state := 0" />
         <Action
           ID="CreateStampedPose"
-          name="Basis-change rotation R (Quest FLU → IMarker EE)"
+          name="Basis-change rotation R (Quest FLU → downward-gripper grasp_link)"
+          stamped_pose="{basis_change_pose}"
+          reference_frame="quest"
+          orientation_xyzw="0.7071068;0.7071068;0;0"
+          position_xyz="0.000000;0.000000;0.000000"
+        />
+        <Action
+          ID="CreateStampedPose"
+          name="Basis-change rotation R (Quest FLU → grasp_link)"
+          _skipIf="true"
           stamped_pose="{basis_change_pose}"
           reference_frame="quest"
           orientation_xyzw="-0.5;-0.5;-0.5;0.5"
@@ -103,31 +112,71 @@
               message_count="{trigger_message_count}"
               message_received="{message_received}"
             />
-            <!--Toggle gripper_open and dispatch to the matching subtree. The bool is
-                 flipped first so the Precondition reads the *new* state: true → Open,
-                 false → Close. Init seeds gripper_open := true (line above), and the
-                 init also runs Open Gripper, keeping bool and physical state aligned.-->
-            <Action ID="Script" code="gripper_open := !gripper_open" />
+            <!--Cycle the gripper through three positions: 0.05 (mostly open),
+                 0.45 (half), 0.79 (fully closed). Init seeds gripper_state := 0
+                 and runs MoveGripperAction at 0.05 to align bookkeeping with
+                 physical state. Each trigger press advances by one mod 3.
+
+                 BT.CPP's scripting grammar doesn't accept `%`, so the wrap is
+                 done in two steps: increment, then reset to 0 via a Precondition
+                 that fires only when gripper_state has overflowed past 2.-->
+            <Action ID="Script" code="gripper_state := gripper_state + 1" />
+            <Decorator
+              ID="Precondition"
+              name="Wrap gripper_state mod 3"
+              _collapsed="false"
+              if="gripper_state >= 3"
+              else="SUCCESS"
+            >
+              <Action ID="Script" code="gripper_state := 0" />
+            </Decorator>
             <Control
               ID="Fallback"
-              name="Dispatch open vs close based on toggled state"
+              name="Dispatch gripper position by cycle state"
               _collapsed="false"
             >
               <Decorator
                 ID="Precondition"
                 _collapsed="false"
-                if="gripper_open"
+                if="gripper_state == 0"
                 else="FAILURE"
               >
                 <Action
                   ID="MoveGripperAction"
-                  name="Half open gripper"
+                  name="Mostly open (0.05)"
                   gripper_command_action_name="/robotiq_gripper_controller/gripper_cmd"
                   position="0.05"
                   timeout="10.000000"
                 />
               </Decorator>
-              <SubTree ID="Close Gripper" _collapsed="false" />
+              <Decorator
+                ID="Precondition"
+                _collapsed="false"
+                if="gripper_state == 1"
+                else="FAILURE"
+              >
+                <Action
+                  ID="MoveGripperAction"
+                  name="Half closed (0.45)"
+                  gripper_command_action_name="/robotiq_gripper_controller/gripper_cmd"
+                  position="0.45"
+                  timeout="10.000000"
+                />
+              </Decorator>
+              <Decorator
+                ID="Precondition"
+                _collapsed="false"
+                if="gripper_state == 2"
+                else="FAILURE"
+              >
+                <Action
+                  ID="MoveGripperAction"
+                  name="Fully closed (0.79)"
+                  gripper_command_action_name="/robotiq_gripper_controller/gripper_cmd"
+                  position="0.79"
+                  timeout="10.000000"
+                />
+              </Decorator>
             </Control>
           </Control>
         </Decorator>
@@ -377,9 +426,12 @@
                     source_to_destination_pose="{pose_transform}"
                   />
                   <!--Re-express the controller delta from Quest FLU (X=fwd, Y=left, Z=up)
-                       into the IMarker EE convention (X=left, Y=up, Z=fwd) so that when
-                       the delta is applied to grasp_link below, the X/Y/Z components align
-                       with grasp_link's local axes.
+                       into the grasp_link axes the operator finds natural when the
+                       gripper is pointing down. The chosen mapping from the user's
+                       point of view:
+                         controller left    (Quest +Y) → grasp_link +X
+                         controller up      (Quest +Z) → grasp_link −Z
+                         controller forward (Quest +X) → grasp_link +Y
 
                        The change of basis is a conjugation: pose_transform := R · pose_transform · R⁻¹.
                        We express it via two existing core primitives — pre-mul by R using
@@ -390,10 +442,12 @@
                        symmetrically via TransformPoseFrame to both source and destination
                        of CalculatePoseOffset cancels.
 
-                       Quaternion R (xyzw) = (-0.5, -0.5, -0.5, 0.5) is a 120° rotation
-                       around (1,1,1)/√3 mapping Quest FLU → IMarker EE axes. Its inverse
-                       R⁻¹ = (0.5, 0.5, 0.5, 0.5) is the same rotation in the opposite
-                       sense (unit-quaternion inverse = (-x,-y,-z, w)).-->
+                       Quaternion R (xyzw) = (1/√2, 1/√2, 0, 0) ≈ (0.7071, 0.7071, 0, 0)
+                       is a 180° rotation around the axis (1,1,0)/√2 implementing the
+                       mapping above. Its inverse R⁻¹ = (−0.7071, −0.7071, 0, 0) is the
+                       same rotation in the opposite sense (unit-quaternion inverse =
+                       (−x,−y,−z, w)). The basis change is FIXED at init: it does not
+                       adapt if the gripper is reoriented mid-session.-->
                   <Action
                     ID="TransformPoseWithPose"
                     name="Conjugate step 1: pose_transform := R · pose_transform"
@@ -404,9 +458,22 @@
                   <Action
                     ID="TransformPose"
                     name="Conjugate step 2: pose_transform := pose_transform · R⁻¹"
+                    _skipIf="true"
                     input_pose="{pose_transform}"
                     translation_xyz="0;0;0"
                     quaternion_xyzw="0.5;0.5;0.5;0.5"
+                    output_pose="{pose_transform}"
+                    marker_lifetime="0.000000"
+                    marker_size="0.100000"
+                    marker_text=""
+                    visualize_pose="false"
+                  />
+                  <Action
+                    ID="TransformPose"
+                    name="Conjugate step 2: pose_transform := pose_transform · R⁻¹"
+                    input_pose="{pose_transform}"
+                    translation_xyz="0;0;0"
+                    quaternion_xyzw="-0.7071068;-0.7071068;0;0"
                     output_pose="{pose_transform}"
                     marker_lifetime="0.000000"
                     marker_size="0.100000"
