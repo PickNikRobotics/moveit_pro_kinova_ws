@@ -98,8 +98,10 @@ ros2_control:
     package: "picknik_006_gen3_mock"
     path: "config/control/picknik_kinova_gen3.ros2_control.yaml"
   # Load and start these controllers so they can be used immediately.
+  # _mock has no force-torque sensor — the FTS broadcaster is dropped here
+  # and added back by _sim and _hw. JTAC / VFC still load (they fall back
+  # to FTS-less operation per their param blocks).
   controllers_active_at_startup:
-    - "force_torque_sensor_broadcaster"
     - "joint_state_broadcaster"
     - "robotiq_gripper_controller"
   controllers_inactive_at_startup:

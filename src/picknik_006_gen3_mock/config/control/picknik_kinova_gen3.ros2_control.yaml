@@ -18,7 +18,10 @@ controller_manager:
     fault_controller:
       type: picknik_reset_fault_controller/PicknikResetFaultController
 
-    # Loaded but inactive at startup; activated by PoseJog / JointJog behaviors.
+    # JTAC and VFC run without a force-torque sensor in _mock — their param
+    # blocks below omit ft_sensor_name and point sensor_frame at grasp_link.
+    # _sim and _hw override this manifest with one that adds an FTS broadcaster
+    # and configures JTAC / VFC to consume it.
     joint_trajectory_admittance_controller:
       type: joint_trajectory_admittance_controller/JointTrajectoryAdmittanceController
 
@@ -27,10 +30,6 @@ controller_manager:
 
     joint_velocity_controller:
       type: joint_velocity_controller/JointVelocityController
-
-    # Force-torque sensor at the Kinova wrist; consumed by JTAC + VFC.
-    force_torque_sensor_broadcaster:
-      type: force_torque_sensor_broadcaster/ForceTorqueSensorBroadcaster
 
 
 joint_trajectory_controller:
@@ -97,21 +96,23 @@ robotiq_gripper_controller:
     stall_timeout: 0.05
     goal_tolerance: 0.02
 
+# JTAC without an FTS: ft_sensor_name omitted; sensor_frame falls back to a
+# link that exists in the kinematic chain (grasp_link is the same link used
+# as ee_frame). _sim / _hw override this with ft_sensor_name set.
 joint_trajectory_admittance_controller:
   ros__parameters:
     planning_group_name: manipulator
-    sensor_frame: fts_link
+    sensor_frame: grasp_link
     ee_frame: grasp_link
-    ft_sensor_name: fts
     default_path_tolerance: 0.5
     stop_accelerations: [3.0, 3.0, 3.0, 3.0, 5.0, 5.0, 5.0]
 
+# VFC without an FTS — same convention as JTAC above.
 velocity_force_controller:
   ros__parameters:
     planning_group_name: manipulator
-    sensor_frame: fts_link
+    sensor_frame: grasp_link
     ee_frame: grasp_link
-    ft_sensor_name: fts
     ft_force_deadband: 2.0
     ft_torque_deadband: 1.0
     max_joint_velocity:
@@ -171,15 +172,3 @@ joint_velocity_controller:
     command_timeout: 0.2
     # Hz at which the controller publishes state.
     state_publish_rate: 20
-
-force_torque_sensor_broadcaster:
-  ros__parameters:
-    sensor_name: fts
-    state_interface_names:
-      - force.x
-      - force.y
-      - force.z
-      - torque.x
-      - torque.y
-      - torque.z
-    frame_id: fts_link

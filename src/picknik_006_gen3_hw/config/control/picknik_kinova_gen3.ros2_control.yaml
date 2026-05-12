@@ -16,6 +16,20 @@ controller_manager:
       type: joint_velocity_controller/JointVelocityController
     fault_controller:
       type: picknik_reset_fault_controller/PicknikResetFaultController
+    force_torque_sensor_broadcaster:
+      type: force_torque_sensor_broadcaster/ForceTorqueSensorBroadcaster
+
+force_torque_sensor_broadcaster:
+  ros__parameters:
+    sensor_name: fts
+    state_interface_names:
+      - force.x
+      - force.y
+      - force.z
+      - torque.x
+      - torque.y
+      - torque.z
+    frame_id: fts_link
 
 joint_trajectory_controller:
   ros__parameters:
