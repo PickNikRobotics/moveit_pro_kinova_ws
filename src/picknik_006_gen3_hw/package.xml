@@ -23,6 +23,7 @@
   <exec_depend>kortex_driver</exec_depend>
   <exec_depend>picknik_reset_fault_controller</exec_depend>
   <exec_depend>realsense2_camera</exec_depend>
+  <exec_depend>ros_tcp_endpoint</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
 

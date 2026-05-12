@@ -117,6 +117,9 @@ objectives:
       - "moveit_pro::behaviors::MTCCoreBehaviorsLoader"
       - "moveit_pro::behaviors::VisionBehaviorsLoader"
       - "moveit_pro::behaviors::ConverterBehaviorsLoader"
+    # Experimental behaviors backing the Quest teleop objective.
+    experimental:
+      - "experimental_behaviors::ExperimentalBehaviorsLoader"
   objective_library_paths:
     core_objectives:
       package_name: "moveit_pro_objectives"

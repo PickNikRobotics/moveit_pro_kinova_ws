@@ -1,9 +1,14 @@
-# Copyright 2022 PickNik Inc.
+# Copyright 2026 PickNik Inc.
 # All rights reserved.
 #
 # Unauthorized copying of this code base via any medium is strictly prohibited.
 # Proprietary and confidential.
 
+# Persistent driver-side processes for picknik_006_gen3_hw. Lives in the
+# "drivers to persist" lifecycle so it survives agent_bridge restarts —
+# matters because the Meta Quest headset holds a TCP socket open against
+# ros_tcp_endpoint, and tearing that down would force the user to reconnect
+# from the headset.
 
 from launch import LaunchDescription
 from launch_ros.actions import Node
@@ -35,9 +40,10 @@ def generate_launch_description():
         ],
     )
 
-    # Meta Quest TCP endpoint. Lives in the persist launch so the headset's
-    # TCP socket survives agent_bridge restarts. Edit ROS_IP to your host
-    # machine's IP before running.
+    # Meta Quest TCP endpoint. Edit ROS_IP to your host machine's IP before
+    # running. No static_tf_world_to_quest on real hardware; the URDF and
+    # the real world frame are real, the sim-only TF hack would be
+    # incorrect here.
     ros_tcp_endpoint_node = Node(
         package="ros_tcp_endpoint",
         executable="default_server_endpoint",
@@ -49,9 +55,7 @@ def generate_launch_description():
         output="screen",
     )
 
-    nodes_to_launch = [
+    return LaunchDescription([
         protective_stop_manager_node,
         ros_tcp_endpoint_node,
-    ]
-
-    return LaunchDescription(nodes_to_launch)
+    ])
