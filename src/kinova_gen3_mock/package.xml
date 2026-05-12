@@ -15,11 +15,14 @@
   <depend>kinova_pstop_manager</depend>
   <depend>kortex_description</depend>
 
+  <exec_depend>joint_trajectory_admittance_controller</exec_depend>
+  <exec_depend>joint_velocity_controller</exec_depend>
   <exec_depend>moveit_ros_perception</exec_depend>
   <exec_depend>moveit_studio_agent</exec_depend>
   <exec_depend>moveit_pro_behavior</exec_depend>
   <exec_depend>picknik_accessories</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>velocity_force_controller</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
 

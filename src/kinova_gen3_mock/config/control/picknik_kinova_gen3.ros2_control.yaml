@@ -11,6 +11,16 @@ controller_manager:
     twist_controller:
       type: picknik_twist_controller/PicknikTwistController
 
+    # Loaded but inactive at startup; activated by PoseJog / JointJog behaviors.
+    joint_trajectory_admittance_controller:
+      type: joint_trajectory_admittance_controller/JointTrajectoryAdmittanceController
+
+    velocity_force_controller:
+      type: velocity_force_controller/VelocityForceController
+
+    joint_velocity_controller:
+      type: joint_velocity_controller/JointVelocityController
+
 
 joint_trajectory_controller:
   ros__parameters:
