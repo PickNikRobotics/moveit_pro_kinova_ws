@@ -51,7 +51,7 @@ def generate_launch_description():
         name="ros_tcp_endpoint",
         emulate_tty=True,
         parameters=[
-            {"ROS_IP": "10.6.1.94"},
+            {"ROS_IP": "0.0.0.0"},
         ],
         output="both",
     )

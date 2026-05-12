@@ -5,13 +5,19 @@
     _description="Clutch-based teleoperation driven by a Meta Quest controller. Grip press snapshots the grasp + controller poses; the controller delta in the quest frame is applied as a world-frame delta on the EE until grip release. Per-button slot actions default to AlwaysSuccess; replace inline to customize."
     _favorite="false"
   >
-    <Control ID="Sequence" name="TopLevelSequence">
+    <Control ID="Sequence" name="TopLevelSequence" _collapsed="false">
       <!--Initialization: open the gripper, seed gripper_open=true so any handler
            that toggles it has a defined starting value, and seed the basis-change
            pose used inside the consumer loop (see comment above the conjugation
            below).-->
-      <Control ID="Sequence" name="Teleop Init">
-        <SubTree ID="Open Gripper" _collapsed="true" />
+      <Control ID="Sequence" name="Teleop Init" _collapsed="false">
+        <Action
+          ID="MoveGripperAction"
+          name="Half open gripper"
+          gripper_command_action_name="/robotiq_gripper_controller/gripper_cmd"
+          position="0.05"
+          timeout="10.000000"
+        />
         <Action ID="Script" code="gripper_open := true" />
         <Action
           ID="CreateStampedPose"
@@ -38,6 +44,7 @@
       <Control
         ID="Parallel"
         name="Top-level event branches + grip-driven teleop session"
+        _collapsed="false"
         failure_count="1"
         success_count="-1"
       >
@@ -45,8 +52,9 @@
         <Decorator
           ID="KeepRunningUntilFailure"
           name="Right A button event loop"
+          _collapsed="false"
         >
-          <Control ID="Sequence">
+          <Control ID="Sequence" _collapsed="false">
             <Action
               ID="GetEmptyInstance"
               empty_topic_name="/right_a_button_event"
@@ -65,8 +73,9 @@
         <Decorator
           ID="KeepRunningUntilFailure"
           name="Right B button event loop"
+          _collapsed="false"
         >
-          <Control ID="Sequence">
+          <Control ID="Sequence" _collapsed="false">
             <Action
               ID="GetEmptyInstance"
               empty_topic_name="/right_b_button_event"
@@ -85,17 +94,41 @@
         <Decorator
           ID="KeepRunningUntilFailure"
           name="Right trigger button event loop"
+          _collapsed="false"
         >
-          <Control ID="Sequence">
+          <Control ID="Sequence" _collapsed="false">
             <Action
               ID="GetEmptyInstance"
               empty_topic_name="/right_trigger_button_event"
               message_count="{trigger_message_count}"
               message_received="{message_received}"
             />
-            <!--Slot: replace with your own action (e.g. toggle gripper_open and
-                 PublishBool to /gripper_button for the documented gripper-trigger architecture).-->
-            <Action ID="AlwaysSuccess" />
+            <!--Toggle gripper_open and dispatch to the matching subtree. The bool is
+                 flipped first so the Precondition reads the *new* state: true → Open,
+                 false → Close. Init seeds gripper_open := true (line above), and the
+                 init also runs Open Gripper, keeping bool and physical state aligned.-->
+            <Action ID="Script" code="gripper_open := !gripper_open" />
+            <Control
+              ID="Fallback"
+              name="Dispatch open vs close based on toggled state"
+              _collapsed="false"
+            >
+              <Decorator
+                ID="Precondition"
+                _collapsed="false"
+                if="gripper_open"
+                else="FAILURE"
+              >
+                <Action
+                  ID="MoveGripperAction"
+                  name="Half open gripper"
+                  gripper_command_action_name="/robotiq_gripper_controller/gripper_cmd"
+                  position="0.05"
+                  timeout="10.000000"
+                />
+              </Decorator>
+              <SubTree ID="Close Gripper" _collapsed="false" />
+            </Control>
           </Control>
         </Decorator>
         <!--Left controller event handlers. The left A button is intentionally NOT wired
@@ -103,8 +136,12 @@
              IP address (see _keyboardAction = FindAndEnableAction("OpenKeyboard") in
              ROSPublishers.cs). Subscribing to /left_a_button_event would race with the
              Quest's local keyboard handling, so we don't.-->
-        <Decorator ID="KeepRunningUntilFailure" name="Left B button event loop">
-          <Control ID="Sequence">
+        <Decorator
+          ID="KeepRunningUntilFailure"
+          name="Left B button event loop"
+          _collapsed="false"
+        >
+          <Control ID="Sequence" _collapsed="false">
             <Action
               ID="GetEmptyInstance"
               empty_topic_name="/left_b_button_event"
@@ -118,8 +155,9 @@
         <Decorator
           ID="KeepRunningUntilFailure"
           name="Left trigger button event loop"
+          _collapsed="false"
         >
-          <Control ID="Sequence">
+          <Control ID="Sequence" _collapsed="false">
             <Action
               ID="GetEmptyInstance"
               empty_topic_name="/left_trigger_button_event"
@@ -142,22 +180,24 @@
               automatic_activation="true"
               deactivate_controllers=""
             />
-            <SubTree
-              ID="Move to Waypoint"
-              name="Move to Home"
-              _collapsed="true"
-              joint_group_name="manipulator"
-              waypoint_name="Demonstration Home"
-              acceleration_scale_factor="1.0"
-              controller_action_server="/joint_trajectory_admittance_controller/follow_joint_trajectory"
-              controller_names="joint_trajectory_admittance_controller"
-              execution_pipeline="jtac"
-              keep_orientation="false"
-              keep_orientation_tolerance="0.05"
-              link_padding="0.01"
-              seed="0"
-              velocity_scale_factor="1.0"
-            />
+            <Decorator ID="ForceSuccess" name="ForceSuccess">
+              <SubTree
+                ID="Move to Waypoint"
+                name="Move to Home"
+                _collapsed="false"
+                joint_group_name="manipulator"
+                waypoint_name="Demonstration Home"
+                acceleration_scale_factor="0.5"
+                controller_action_server="/joint_trajectory_admittance_controller/follow_joint_trajectory"
+                controller_names="joint_trajectory_admittance_controller"
+                execution_pipeline="jtac"
+                keep_orientation="false"
+                keep_orientation_tolerance="0.05"
+                link_padding="0.01"
+                seed="0"
+                velocity_scale_factor="0.5"
+              />
+            </Decorator>
             <Action
               ID="SwitchController"
               name="Switch back to VFC"
@@ -174,9 +214,17 @@
           </Control>
         </Decorator>
         <!--Grip-driven teleop session: block on grip event, snapshot, run inner loop until release.-->
-        <Decorator ID="KeepRunningUntilFailure" name="Grip teleop session loop">
-          <Control ID="Sequence" name="One grip cycle">
-            <Control ID="Sequence" name="Zero twist/wrench before each cycle">
+        <Decorator
+          ID="KeepRunningUntilFailure"
+          name="Grip teleop session loop"
+          _collapsed="false"
+        >
+          <Control ID="Sequence" name="One grip cycle" _collapsed="false">
+            <Control
+              ID="Sequence"
+              name="Zero twist/wrench before each cycle"
+              _collapsed="false"
+            >
               <Action
                 ID="CreateStampedWrench"
                 stamped_wrench="{stamped_wrench}"
@@ -200,10 +248,29 @@
               message_count="{message_count}"
             />
             <Action ID="LogMessage" message="grip event" log_level="info" />
+            <Decorator ID="Delay" name="Delay" delay_msec="10">
+              <Action ID="AlwaysSuccess" name="AlwaysSuccess" />
+            </Decorator>
             <Control
               ID="Sequence"
               name="Snapshot grasp_link and controller poses (one-shot, must not race CalculatePoseOffset)"
+              _collapsed="false"
             >
+              <Control
+                ID="Parallel"
+                name="Snapshot controller odom via timed GetOdomLatest"
+                failure_count="1"
+                success_count="1"
+              >
+                <Action
+                  ID="GetOdomLatest"
+                  name="GetOdomLatest snapshot producer"
+                  odometry_topic_name="/right_controller_odom"
+                  subscribed_odometry="{snapshot_odometry}"
+                  odometry_pose="{snapshot_odometry_pose_unused}"
+                />
+                <Action ID="WaitForDuration" delay_duration="0.05" />
+              </Control>
               <Action
                 ID="CreateStampedPose"
                 name="Identity pose at grasp_link"
@@ -223,15 +290,14 @@
                 pose="{initial_grasp_pose}"
                 marker_name="initial grasp pose"
                 marker_size="0.100000"
-                marker_text="i_g"
+                marker_text="i_g_______*_"
                 marker_lifetime="0.000000"
               />
-              <Action
-                ID="GetOdomInstance"
-                name="Snapshot controller odom (one-shot, blocks for fresh message)"
-                odom_topic_name="/right_controller_odom"
-                subscribed_odom_instance="{snapshot_odometry}"
-              />
+              <!--Workaround: GetOdomInstance was observed returning stale data
+                   despite its "blocks for fresh message" contract. Run the latest-wins
+                   subscriber for ~50ms instead so {snapshot_odometry} is overwritten
+                   with whatever message arrives during the window. At Quest 72 Hz
+                   that's ~3-4 messages per window — comfortable margin.-->
               <Action
                 ID="ConvertOdomToPoseStamped"
                 odometry="{snapshot_odometry}"
@@ -254,9 +320,16 @@
                 ID="VisualizePose"
                 pose="{initial_controller_pose}"
                 marker_name="initial controller pose"
-                marker_text="i_c"
+                marker_text="i_c_______*_"
                 marker_lifetime="0.000000"
                 marker_size="0.100000"
+              />
+              <Action ID="AlwaysFailure" name="AlwaysFailure" _skipIf="true" />
+              <Action
+                ID="BreakpointSubscriber"
+                name="BreakpointSubscriber"
+                _skipIf="true"
+                breakpoint_topic="/moveit_pro_breakpoint"
               />
               <!--Seed the inner-loop consumer's input from the same snapshot
                    so its first tick computes delta = identity, before GetOdom
@@ -274,6 +347,7 @@
             <Control
               ID="Parallel"
               name="Inner teleop: producer + consumer + publisher + tick slot + release detector"
+              _collapsed="false"
               failure_count="1"
               success_count="1"
             >
@@ -293,8 +367,9 @@
               <Decorator
                 ID="KeepRunningUntilFailure"
                 name="Compute velocity command"
+                _collapsed="false"
               >
-                <Control ID="Sequence">
+                <Control ID="Sequence" _collapsed="false">
                   <Action
                     ID="CalculatePoseOffset"
                     source_pose="{initial_controller_pose}"
@@ -360,7 +435,7 @@
                     ID="VisualizePose"
                     pose="{target_pose}"
                     marker_name="target"
-                    marker_text="target"
+                    marker_text="____*_target"
                     marker_size="0.1"
                     marker_lifetime="0.000000"
                   />
@@ -371,7 +446,7 @@
                     ID="VisualizePose"
                     pose="{controller_pose}"
                     marker_name="controller"
-                    marker_text="controller"
+                    marker_text="____*_cntllr"
                     marker_lifetime="0.000000"
                     marker_size="0.100000"
                   />
@@ -423,8 +498,9 @@
               <Decorator
                 ID="KeepRunningUntilFailure"
                 name="On Teleop Tick slot loop"
+                _collapsed="false"
               >
-                <Control ID="Sequence">
+                <Control ID="Sequence" _collapsed="false">
                   <!--Slot: replace with your own per-tick teleop action (e.g. publish telemetry, log diagnostics).-->
                   <Action ID="AlwaysSuccess" />
                   <Action ID="WaitForDuration" delay_duration="0.1" />
@@ -442,14 +518,35 @@
               />
               <!--Release detector: when {grip_held} flips to false, Precondition fails,
                    KRUF returns FAILURE, Inverter returns SUCCESS, parallel exits.-->
-              <Decorator ID="Inverter" name="Return SUCCESS on grip release">
-                <Decorator ID="KeepRunningUntilFailure">
-                  <Decorator ID="Precondition" if="grip_held" else="FAILURE">
+              <Decorator
+                ID="Inverter"
+                name="Return SUCCESS on grip release"
+                _collapsed="false"
+              >
+                <Decorator ID="KeepRunningUntilFailure" _collapsed="false">
+                  <Decorator
+                    ID="Precondition"
+                    _collapsed="false"
+                    if="grip_held"
+                    else="FAILURE"
+                  >
                     <Action ID="AlwaysSuccess" />
                   </Decorator>
                 </Decorator>
               </Decorator>
             </Control>
+            <!--Reset initial_controller_pose on grip release so a stale snapshot
+                 from the just-ended session can't be silently reused. The
+                 sentinel reference_frame surfaces accidental downstream reads as
+                 a recognizable TF lookup failure rather than a silent miscompute.-->
+            <Action
+              ID="CreateStampedPose"
+              name="Invalidate initial_controller_pose after grip release"
+              stamped_pose="{initial_controller_pose}"
+              reference_frame="INVALID_initial_controller_pose"
+              orientation_xyzw="0;0;0;1"
+              position_xyz="0;0;0"
+            />
           </Control>
         </Decorator>
       </Control>
