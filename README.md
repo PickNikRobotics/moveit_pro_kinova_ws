@@ -6,9 +6,27 @@ Refer to the [Kinova Gen3 Hardware Setup Guide](https://docs.picknik.ai/hardware
 
 ## Included configurations
 
-- `kinova_gen3_base_config` — shared base configuration inherited by site and sim configs.
-- `kinova_gen3_site_config` — hardware site configuration for a Kinova Gen3 7DoF + Robotiq 2F-85/140 gripper.
-- `kinova_sim` — MuJoCo-based simulation configuration of the Kinova Gen3 + Robotiq gripper.
-- `space_satellite_sim` — Space-themed satellite manipulation demo built on `kinova_sim`.
-- `space_satellite_sim_camera_cal` — Camera-calibration variant of `space_satellite_sim`.
-- `moveit_studio_kinova_pstop_manager` — Helper node for handling Kinova hardware protective-stop events.
+The `main` branch ships a boilerplate Kinova Gen3 7DoF arm with the
+arm-integrated Vision Module wrist camera and no gripper. The three
+configurations form an inheritance chain (per
+[robot_and_objective_inheritance](https://docs.picknik.ai/how_to/configuration_tutorials/robot_and_objective_inheritance/)):
+
+```
+kinova_gen3_mock  →  kinova_gen3_sim  →  kinova_gen3_hw
+```
+
+- `kinova_gen3_mock` — bare arm with `ros2_control` mock hardware. Owns the
+  shared URDF, SRDF, MoveIt configuration, ros2_control config, and Objectives.
+- `kinova_gen3_sim` — MuJoCo-simulated arm. Inherits everything from
+  `kinova_gen3_mock`; only adds the MuJoCo scene and simulator launch file.
+- `kinova_gen3_hw` — real Kinova Kortex hardware. Inherits from
+  `kinova_gen3_sim`; only overrides `simulated`, `robot_ip`, and the hardware
+  driver launch file. Set `robot_ip` for your robot before running.
+- `kinova_pstop_manager` — helper node for Kortex protective-stop events,
+  loaded by the `_hw` driver launch.
+
+Add-ons such as a Robotiq gripper, an external RealSense, or full demos belong
+on their own branches that diverge from this boilerplate. See:
+
+- `space-satellite` — full satellite manipulation demo with Robotiq, external
+  RealSense, AprilTag tracking, and Fuse state estimation.

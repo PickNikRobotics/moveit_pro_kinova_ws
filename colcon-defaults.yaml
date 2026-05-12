@@ -4,7 +4,6 @@ build:
   symlink-install: true
   allow-overriding:
     - kortex_description
-    - robotiq_description
   mixin:
     # Enable ccache support
     - ccache

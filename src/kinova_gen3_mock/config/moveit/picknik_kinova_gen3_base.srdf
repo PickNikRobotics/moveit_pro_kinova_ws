@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--This does not replace URDF, and is not an extension of URDF.
+    This is a format for representing semantic information about the robot structure.
+    A URDF file must exist for this robot as well, where the joints and the links that are referenced are defined.
+
+    This SRDF is the boilerplate Kinova Gen3 7DoF arm with the integrated wrist
+    Vision Module. It intentionally omits a `gripper` group; branches that add
+    a gripper extend it via inheritance.
+-->
+<robot name="gen3">
+    <group name="manipulator">
+        <chain base_link="base_link" tip_link="grasp_link"/>
+    </group>
+
+    <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
+    <disable_collisions link1="base_link" link2="shoulder_link" reason="Adjacent"/>
+    <disable_collisions link1="base_link" link2="half_arm_1_link" reason="Never"/>
+    <disable_collisions link1="base_link" link2="half_arm_2_link" reason="Never"/>
+    <disable_collisions link1="base_link" link2="forearm_link" reason="Never"/>
+    <disable_collisions link1="bracelet_link" link2="end_effector_link" reason="Adjacent"/>
+    <disable_collisions link1="bracelet_link" link2="spherical_wrist_2_link" reason="Adjacent"/>
+    <disable_collisions link1="bracelet_link" link2="spherical_wrist_1_link" reason="Never"/>
+    <disable_collisions link1="bracelet_link" link2="forearm_link" reason="Never"/>
+    <disable_collisions link1="forearm_link" link2="half_arm_1_link" reason="Never"/>
+    <disable_collisions link1="forearm_link" link2="half_arm_2_link" reason="Adjacent"/>
+    <disable_collisions link1="forearm_link" link2="spherical_wrist_1_link" reason="Adjacent"/>
+    <disable_collisions link1="forearm_link" link2="spherical_wrist_2_link" reason="Never"/>
+    <disable_collisions link1="half_arm_1_link" link2="half_arm_2_link" reason="Adjacent"/>
+    <disable_collisions link1="half_arm_1_link" link2="shoulder_link" reason="Adjacent"/>
+    <disable_collisions link1="half_arm_1_link" link2="spherical_wrist_1_link" reason="Never"/>
+    <disable_collisions link1="half_arm_1_link" link2="spherical_wrist_2_link" reason="Never"/>
+    <disable_collisions link1="half_arm_2_link" link2="shoulder_link" reason="Never"/>
+    <disable_collisions link1="half_arm_2_link" link2="spherical_wrist_1_link" reason="Never"/>
+    <disable_collisions link1="half_arm_2_link" link2="spherical_wrist_2_link" reason="Never"/>
+    <disable_collisions link1="shoulder_link" link2="spherical_wrist_1_link" reason="Never"/>
+    <disable_collisions link1="shoulder_link" link2="spherical_wrist_2_link" reason="Never"/>
+    <disable_collisions link1="spherical_wrist_1_link" link2="spherical_wrist_2_link" reason="Adjacent"/>
+</robot>

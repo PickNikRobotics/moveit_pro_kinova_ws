@@ -1,0 +1,25 @@
+###############################################################
+#
+#  MoveIt Pro robot configuration: Kinova Gen3 7DoF in MuJoCo simulation.
+#  Inherits from kinova_gen3_mock and overrides only the simulation-specific
+#  fields (MuJoCo scene, simulated_robot_driver_persist_launch_file).
+#
+###############################################################
+
+based_on_package: "kinova_gen3_mock"
+
+hardware:
+  # Use the MuJoCo simulator backend.
+  simulated: True
+
+  # Bring up MuJoCo as the "robot driver" while running in simulation mode.
+  simulated_robot_driver_persist_launch_file:
+    package: "kinova_gen3_sim"
+    path: "launch/sim/robot_drivers_to_persist_sim.launch.py"
+
+  robot_description:
+    urdf_params:
+      - mujoco_keyframe: "default"
+      - mujoco_model: "description/mujoco/scene.xml"
+      - mujoco_viewer: false
+      - use_fake_hardware: "%>> hardware.simulated"

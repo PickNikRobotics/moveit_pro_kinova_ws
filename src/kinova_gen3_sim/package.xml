@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<package format="3">
+  <name>kinova_gen3_sim</name>
+  <version>6.5.0</version>
+
+  <description>
+    MuJoCo-simulation configuration for a Kinova Gen3 7DoF arm. Inherits the
+    URDF, SRDF, and MoveIt configuration from kinova_gen3_mock; only the MuJoCo
+    scene and simulator launch file are added here.
+  </description>
+
+  <maintainer email="paul.gesel@picknik.ai">Paul Gesel</maintainer>
+  <maintainer email="david.yackzan@picknik.ai">David Yackzan</maintainer>
+
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>kinova_gen3_mock</depend>
+
+  <exec_depend>joint_trajectory_admittance_controller</exec_depend>
+  <exec_depend>picknik_mujoco_ros</exec_depend>
+  <exec_depend>velocity_force_controller</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
