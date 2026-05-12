@@ -99,6 +99,7 @@ ros2_control:
     path: "config/control/picknik_kinova_gen3.ros2_control.yaml"
   # Load and start these controllers so they can be used immediately.
   controllers_active_at_startup:
+    - "force_torque_sensor_broadcaster"
     - "joint_state_broadcaster"
     - "robotiq_gripper_controller"
   controllers_inactive_at_startup:
