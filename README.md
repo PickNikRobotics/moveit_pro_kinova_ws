@@ -43,3 +43,91 @@ picknik_006_gen3_mock  →  picknik_006_gen3_sim  →  picknik_006_gen3_hw
 This branch does not merge back into `main`. `main` holds the bare-arm
 boilerplate (`kinova_gen3_mock` → `kinova_gen3_sim` → `kinova_gen3_hw`); use
 that as the reference when starting a new asset-ID branch.
+
+## Meta Quest teleop over USB (ADB reverse tunnel)
+
+The Quest teleop objective (`picknik_006_gen3_mock/objectives/quest_teleop.xml`)
+talks to the headset over a TCP socket served by `ros_tcp_endpoint`. The path
+can be either WLAN or USB; **USB is strongly preferred** because the Quest's
+WLAN radio aggressively power-saves between bursts and produces multi-100ms
+RTT staircases under load. ADB-reverse over USB-C tunnels the Quest app's
+TCP connection through the cable to localhost on this machine, sidestepping
+WLAN entirely.
+
+### A. First-time setup on a new machine
+
+One-time per rtpc. Steps assume a Debian/Ubuntu host with `sudo` access.
+
+1. **Enable Developer Mode on the Quest.** In the Meta Quest mobile app:
+   *Devices → (your headset) → Headset Settings → Developer Mode → On*. Requires
+   the headset's Meta account to be in a developer organization (free; create
+   one in the Meta developer dashboard).
+2. **Install `adb` on the host.**
+   ```bash
+   sudo apt install android-tools-adb
+   ```
+3. **Add yourself to the `plugdev` group.** The group already exists on this
+   rtpc; on other hosts run `getent group plugdev` first and `sudo groupadd
+   plugdev` if missing.
+   ```bash
+   sudo usermod -aG plugdev $USER
+   ```
+4. **Install a udev rule for Meta/Oculus USB devices.** The vendor ID is
+   `2833`. Create `/etc/udev/rules.d/51-quest.rules` containing:
+   ```
+   SUBSYSTEM=="usb", ATTR{idVendor}=="2833", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+   ```
+   Then reload udev:
+   ```bash
+   sudo udevadm control --reload-rules
+   sudo udevadm trigger
+   ```
+5. **Refresh group membership** by rebooting, or from a separate TTY:
+   ```bash
+   sudo loginctl terminate-user $USER
+   ```
+   Logging out from a single terminal usually isn't enough — graphical / SSH /
+   `systemd --user` sessions pin the old group set.
+6. **Plug the Quest into a USB-C port.** USB-C is required for charging while
+   in use; USB-A trickle-charges at 2.5 W which is under the Quest's draw.
+7. **Authorize on the headset.** `adb devices` should show the Quest as
+   `unauthorized` initially. Put on the headset and accept the *"Allow USB
+   debugging?"* prompt — **tick "Always allow from this computer"** or you'll
+   see this prompt on every connection. After approval:
+   ```bash
+   adb devices       # Quest should now show "device"
+   ```
+8. **Start the reverse tunnel.**
+   ```bash
+   adb reverse tcp:10000 tcp:10000
+   adb reverse --list   # confirm "UsbFfs tcp:10000 tcp:10000"
+   ```
+9. **Confirm the ROS side is listening on loopback.** The drivers launch file
+   already binds `ros_tcp_endpoint` to `0.0.0.0` (see
+   `picknik_006_gen3_hw/launch/robot_drivers_to_persist.launch.py`), which
+   accepts both the loopback path (USB) and WLAN simultaneously.
+10. **Configure the Quest app to target localhost.** In the Quest's ROS
+    configuration UI, set the host IP to `127.0.0.1` and port `10000`. The
+    Quest app's TCP connection to that loopback address is what `adb reverse`
+    tunnels to the host.
+
+### B. Subsequent use after unplug or Quest power-off
+
+The reverse tunnel mapping is ephemeral — it dies whenever the cable is
+unplugged or `adbd` restarts (which happens on Quest reboot/power-off too).
+Everything else (udev rule, `plugdev` membership, the Quest's saved
+authorization key) persists across reboots and power cycles.
+
+1. Plug the Quest into the USB-C port. Wake it.
+2. Re-establish the tunnel:
+   ```bash
+   adb devices                      # should show "device" (not "unauthorized")
+   adb reverse tcp:10000 tcp:10000
+   ```
+3. If `adb devices` instead shows `unauthorized`, accept the on-headset
+   prompt. This shouldn't happen if you ticked "Always allow" originally; if
+   it does, double-check that the same `~/.android/adbkey` is in use
+   (`md5sum ~/.android/adbkey.pub` should be stable).
+
+The Quest app can be started before or after `adb reverse` — it will retry the
+TCP connection on its own.

@@ -144,18 +144,6 @@
       <origin xyz="0 0 0.15" rpy="0 0 0"/>
     </joint>
 
-    <!-- Camera External -->
-    <link name="external_camera_link" />
-    <joint name="external_camera_joint" type="fixed">
-      <parent link="world" />
-      <child link="external_camera_link" />
-      <origin xyz="-0.3 0.3 1.0" rpy="0.0 0.4 0" />
-    </joint>
-
-    <xacro:realsense_d415 parent="external_camera_link" name="scene_camera">
-      <origin xyz="0 0 0" rpy="0 0 0" />
-    </xacro:realsense_d415>
-
     <!-- Optional Stereolabs ZED 2i scene camera. Enabled on real hardware via the
          enable_zed urdf_param. Disabled by default for mock/sim, which have no
          physical ZED. The placeholder mount pose below comes from a prior
@@ -164,9 +152,9 @@
     <xacro:if value="$(arg enable_zed)">
       <link name="estimated_zed_base_frame" />
       <joint name="estimated_zed_base_frame_joint" type="fixed">
-        <parent link="base_link" />
+        <parent link="world" />
         <child link="estimated_zed_base_frame" />
-        <origin xyz="-0.0364711 0.56 0.32" rpy="-0.0155904 0.0406733 -0.543247" />
+        <origin xyz="0.69 0.33 0.48" rpy="0 0 0" />
       </joint>
       <xacro:zed2i parent="estimated_zed_base_frame" />
     </xacro:if>
