@@ -10,7 +10,12 @@ services:
   base: {}
 
   # Starts the MoveIt Pro Agent and the Bridge between the Agent and the Web UI.
-  agent_bridge: {}
+  # /dev is mounted so USB-attached scene cameras (ZED 2i via zed_open_capture_ros,
+  # launched from cameras.launch.xml) can enumerate. Without this the driver
+  # opens nothing and falls into the SN=-1 calibration-fetch loop.
+  agent_bridge:
+    volumes:
+      - /dev:/dev
 
   # Starts the robot drivers.
   drivers:

@@ -33,6 +33,15 @@ hardware:
       - gripper_joint_name: "robotiq_85_left_knuckle_joint"
       - use_internal_bus_gripper_comm: "true"
       - wrist_realsense: "false"
+      # Cap the Kinova internal-bus gripper force at 30% of max. The arg flows
+      # into KortexMultiInterfaceHardware which calls set_force() in percent on
+      # the internal bus; default is 100. MoveGripperAction does not expose
+      # max_effort on this hardware path, so this URDF param is the only knob.
+      - gripper_max_force: "30"
+      # Stereolabs ZED 2i mounted externally as scene camera. URDF macro lives in
+      # zed_description; the driver (zed_open_capture_ros, CPU-only, no CUDA) is
+      # launched from src/picknik_006_gen3_hw/launch/cameras.launch.xml.
+      - enable_zed: "true"
 
 ros2_control:
   # Re-add the gripper controller (sim drops it) plus the Kinova fault

@@ -27,6 +27,14 @@ ARG USER_GID
 ARG USER_WS=/home/${USERNAME}/user_ws
 ENV USER_WS=${USER_WS}
 
+# ANSI color + real-time stdout for every node launched in any container built
+# from this image. Without these, ros2 launch strips ANSI codes (stdout isn't a
+# TTY under the docker logger), Python print() output buffers until crash, and
+# nodes use output="log" by default so screen sees nothing.
+ENV RCUTILS_COLORIZED_OUTPUT=1
+ENV PYTHONUNBUFFERED=1
+ENV OVERRIDE_LAUNCH_PROCESS_OUTPUT=both
+
 # Also mkdir with user permission directories which will be mounted later to avoid docker creating them as root
 WORKDIR $USER_WS
 # hadolint ignore=DL3008

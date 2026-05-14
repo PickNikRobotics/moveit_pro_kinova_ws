@@ -30,9 +30,12 @@
 	url = https://github.com/tylerjw/serial.git
 [submodule "src/external_dependencies/moveit_pro_experimental_behaviors"]
 	path = src/external_dependencies/moveit_pro_experimental_behaviors
-	url = git@github.com:PickNikRobotics/moveit_pro_experimental_behaviors.git
+	url = https://github.com/PickNikRobotics/moveit_pro_experimental_behaviors.git
 	branch = feat/pose-vector-basis-snapshot-behaviors
 [submodule "src/external_dependencies/ROS-TCP-Endpoint"]
 	path = src/external_dependencies/ROS-TCP-Endpoint
 	url = https://github.com/Unity-Technologies/ROS-TCP-Endpoint.git
 	branch = main-ros2
+[submodule "src/external_dependencies/zed_open_capture_ros"]
+	path = src/external_dependencies/zed_open_capture_ros
+	url = git@github.com:PickNikRobotics/zed_open_capture_ros.git

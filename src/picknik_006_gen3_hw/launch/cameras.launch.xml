@@ -8,4 +8,10 @@
     <arg name="max_color_pub_rate" value="6.0" />
     <arg name="max_depth_pub_rate" value="6.0" />
   </include>
+
+  <!-- Stereolabs ZED 2i scene camera. Uses the open-capture library (no
+       Stereolabs SDK, no CUDA) so it runs on the AMD iGPU. Publishes left/right
+       rectified RGB + camera_info. First run downloads factory calibration from
+       calib.stereolabs.com - needs internet egress. -->
+  <node pkg="zed_open_capture_ros" exec="zed_open_capture_ros" name="zed_camera" />
 </launch>

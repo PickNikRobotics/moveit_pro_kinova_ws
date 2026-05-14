@@ -24,10 +24,12 @@
     <xacro:arg name="gripper_max_velocity" default="100.0" />
     <xacro:arg name="gripper_max_force" default="100.0" />
     <xacro:arg name="wrist_realsense" default="true" />
+    <xacro:arg name="enable_zed" default="false" />
 
     <!-- Import macros for main hardware components -->
     <xacro:include filename="$(find picknik_006_gen3_mock)/description/kortex_robot.xacro" />
     <xacro:include filename="$(find picknik_accessories)/descriptions/sensors/realsense_d415.urdf.xacro"/>
+    <xacro:include filename="$(find zed_description)/urdf/zed2i.urdf.xacro"/>
 
     <!-- Import environment macros -->
     <xacro:include filename="$(find picknik_accessories)/descriptions/geometry/cube.urdf.xacro"/>
@@ -153,5 +155,20 @@
     <xacro:realsense_d415 parent="external_camera_link" name="scene_camera">
       <origin xyz="0 0 0" rpy="0 0 0" />
     </xacro:realsense_d415>
+
+    <!-- Optional Stereolabs ZED 2i scene camera. Enabled on real hardware via the
+         enable_zed urdf_param. Disabled by default for mock/sim, which have no
+         physical ZED. The placeholder mount pose below comes from a prior
+         AprilTag-based calibration on a similar rig; replace with calibrated
+         values for this rtpc before relying on the camera extrinsics. -->
+    <xacro:if value="$(arg enable_zed)">
+      <link name="estimated_zed_base_frame" />
+      <joint name="estimated_zed_base_frame_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="estimated_zed_base_frame" />
+        <origin xyz="-0.0364711 0.56 0.32" rpy="-0.0155904 0.0406733 -0.543247" />
+      </joint>
+      <xacro:zed2i parent="estimated_zed_base_frame" />
+    </xacro:if>
 
 </robot>
