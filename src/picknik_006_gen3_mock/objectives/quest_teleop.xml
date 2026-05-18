@@ -3,7 +3,7 @@
   <BehaviorTree
     ID="Quest Teleop"
     _description="Clutch-based teleoperation driven by a Meta Quest controller. Grip press snapshots the grasp + controller poses; the controller delta in the quest frame is applied as a world-frame delta on the EE until grip release. Per-button slot actions default to AlwaysSuccess; replace inline to customize."
-    _favorite="false"
+    _favorite="true"
   >
     <Control ID="Sequence" name="TopLevelSequence" _collapsed="false">
       <!--Initialization: open the gripper, seed gripper_open=true so any handler
@@ -125,7 +125,7 @@
               ID="Precondition"
               name="Wrap gripper_state mod 3"
               _collapsed="false"
-              if="gripper_state >= 3"
+              if="gripper_state &gt;= 3"
               else="SUCCESS"
             >
               <Action ID="Script" code="gripper_state := 0" />
@@ -197,8 +197,53 @@
               message_count="{left_b_message_count}"
               message_received="{message_received}"
             />
-            <!--Slot: replace with your own action.-->
-            <Action ID="AlwaysSuccess" />
+            <!--Reset shortcut: yield the arm hardware from VFC, drive the joints to
+                 the "Home" waypoint, then hand control back to VFC so the grip teleop
+                 loop can resume.-->
+            <Action
+              ID="SwitchController"
+              name="Switch to JTAC for waypoint motion"
+              activate_controllers="joint_trajectory_admittance_controller"
+              automatic_deactivation="true"
+              controller_switch_action_name="/controller_manager/switch_controller"
+              timeout="-1.000000"
+              activate_asap="true"
+              strictness="1"
+              controller_list_action_name="/controller_manager/list_controllers"
+              automatic_activation="true"
+              deactivate_controllers=""
+            />
+            <Decorator ID="ForceSuccess" name="ForceSuccess">
+              <SubTree
+                ID="Move to Waypoint"
+                name="Move to Home"
+                _collapsed="false"
+                joint_group_name="manipulator"
+                waypoint_name="Demonstration Drop"
+                acceleration_scale_factor="0.5"
+                controller_action_server="/joint_trajectory_admittance_controller/follow_joint_trajectory"
+                controller_names="joint_trajectory_admittance_controller"
+                execution_pipeline="jtac"
+                keep_orientation="false"
+                keep_orientation_tolerance="0.05"
+                link_padding="0.01"
+                seed="0"
+                velocity_scale_factor="0.5"
+              />
+            </Decorator>
+            <Action
+              ID="SwitchController"
+              name="Switch back to VFC"
+              activate_controllers="velocity_force_controller"
+              automatic_deactivation="true"
+              controller_switch_action_name="/controller_manager/switch_controller"
+              timeout="-1.000000"
+              activate_asap="true"
+              strictness="1"
+              controller_list_action_name="/controller_manager/list_controllers"
+              automatic_activation="true"
+              deactivate_controllers=""
+            />
           </Control>
         </Decorator>
         <Decorator

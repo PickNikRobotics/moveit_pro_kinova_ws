@@ -20,14 +20,56 @@
     - joint_6
     - joint_7
     position:
-    - 0.049519671535491944
-    - -1.0280451619011837
-    - 0.42828800189940264
-    - 2.9594582676909473
-    - -1.3878494104474672
-    - 0.1614267271715828
-    - -1.3162279539875303
-    - 0.14109290968233937
+    - 0.04973684935569763
+    - -0.1754842063408093
+    - 0.2955573181713712
+    - -2.7314637151887187
+    - -1.9760562077749793
+    - -0.1643964014583732
+    - -0.8183840766591697
+    - 0.9721918162024152
+    velocity: []
+  multi_dof_joint_state:
+    header:
+      frame_id: ''
+      stamp:
+        nanosec: 0
+        sec: 0
+    joint_names: []
+    transforms: []
+    twist: []
+    wrench: []
+  name: Demonstration Drop
+- description: ''
+  favorite: false
+  joint_group_names:
+  - gripper
+  - manipulator
+  joint_state:
+    effort: []
+    header:
+      frame_id: ''
+      stamp:
+        nanosec: 0
+        sec: 0
+    name:
+    - robotiq_85_left_knuckle_joint
+    - joint_1
+    - joint_2
+    - joint_3
+    - joint_4
+    - joint_5
+    - joint_6
+    - joint_7
+    position:
+    - 0.44763157081604005
+    - -0.9381453656155969
+    - 0.5434435534876196
+    - -3.136710280363351
+    - -1.5615349177880367
+    - 0.1695651310810264
+    - -0.960132423575291
+    - 0.24261152852696707
     velocity: []
   multi_dof_joint_state:
     header:
