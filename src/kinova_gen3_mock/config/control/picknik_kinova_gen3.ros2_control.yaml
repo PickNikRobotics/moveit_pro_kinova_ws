@@ -8,9 +8,6 @@ controller_manager:
     joint_trajectory_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
-    twist_controller:
-      type: picknik_twist_controller/PicknikTwistController
-
     # Loaded but inactive at startup; activated by PoseJog / JointJog behaviors.
     joint_trajectory_admittance_controller:
       type: joint_trajectory_admittance_controller/JointTrajectoryAdmittanceController
@@ -20,6 +17,15 @@ controller_manager:
 
     joint_velocity_controller:
       type: joint_velocity_controller/JointVelocityController
+
+    # Clears Kortex hardware faults, and publishes the /fault_controller/
+    # internal_fault topic that kinova_pstop_manager's protective_stop_manager_node
+    # watchdogs. Activated only by kinova_gen3_hw: it needs the Kortex hardware
+    # interface's fault-reset interface, which mock_components/GenericSystem does
+    # not provide, and in mock the same topic and service are supplied by
+    # mock_kinova_client_node running under the name "fault_controller".
+    fault_controller:
+      type: picknik_reset_fault_controller/PicknikResetFaultController
 
 
 joint_trajectory_controller:
@@ -67,13 +73,106 @@ joint_trajectory_controller:
       joint_7:
         goal: 0.05
 
-twist_controller:
+# The Gen3 exposes no force-torque sensor through the pinned ros2_kortex
+# (kortex.ros2_control.xacro declares no <sensor>), so JTAC and VFC below omit
+# ft_sensor_name and point their sensor frame at grasp_link — the same link used
+# as the end-effector frame. A branch that mounts an external FTS overrides this
+# manifest.
+#
+# The max_joint_velocity and max_joint_acceleration arrays below must not exceed
+# the limits declared in config/moveit/joint_limits.yaml, and this manifest is
+# shared by kinova_gen3_mock and kinova_gen3_hw, so they track the stricter of the
+# two: kinova_gen3_hw caps every joint at 1.0 rad/s where kinova_gen3_mock allows
+# the URDF's 1.3963 / 1.2218. Accelerations are 8.6 on every joint, which is what
+# upstream ros2_kortex ships for the Gen3 7DoF
+# (kortex_moveit_config/kinova_gen3_7dof_robotiq_2f_85_moveit_config/config/joint_limits.yaml).
+# Keep the three files in step when changing any of them.
+#
+# stop_accelerations below is deliberately NOT held to those limits: it is the
+# deceleration used to synthesize the stop trajectory on cancel, abort, or a path
+# tolerance violation, so it must EXCEED the normal-motion acceleration or the
+# abort is slower than the motion it is aborting. 30.0 matches the value the
+# product's own reference configs ship.
+#
+# grasp_link is spelled without a prefix here. picknik_kinova_gen3.xacro defines it
+# as $(arg prefix)grasp_link, so a config that sets a non-empty prefix must
+# override these frames too or the controllers will name a frame that does not
+# exist, which surfaces only when they are activated.
+joint_trajectory_admittance_controller:
   ros__parameters:
-    joint: tcp
-    interface_names:
-      - twist.linear.x
-      - twist.linear.y
-      - twist.linear.z
-      - twist.angular.x
-      - twist.angular.y
-      - twist.angular.z
+    planning_group_name: manipulator
+    # Plural forms; the singular sensor_frame / ee_frame are deprecated.
+    sensor_frames: [grasp_link]
+    ee_frames: [grasp_link]
+    # Pure tracking error: JTAC aborts when |commanded - measured| exceeds this on
+    # any joint. It is unrelated to force sensing — admittance deflection is what
+    # would justify slack, and this config has no FTS, so it can afford a tight
+    # value. Raise it only against a measured tracking trace on real hardware.
+    default_path_tolerance: 0.05
+    stop_accelerations: [30.0, 30.0, 30.0, 30.0, 30.0, 30.0, 30.0]
+
+velocity_force_controller:
+  ros__parameters:
+    planning_group_name: manipulator
+    sensor_frame: grasp_link
+    ee_frame: grasp_link
+    max_joint_velocity:
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+    max_joint_acceleration:
+      - 8.6
+      - 8.6
+      - 8.6
+      - 8.6
+      - 8.6
+      - 8.6
+      - 8.6
+    max_cartesian_velocity:
+      - 0.25
+      - 0.25
+      - 0.25
+      - 1.5707
+      - 1.5707
+      - 1.5707
+    max_cartesian_acceleration:
+      - 0.2
+      - 0.2
+      - 0.2
+      - 1.0
+      - 1.0
+      - 1.0
+
+joint_velocity_controller:
+  ros__parameters:
+    # Joint group to control.
+    planning_group_name: manipulator
+    # Maximum joint-space velocities.
+    max_joint_velocity:
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+      - 1.0
+    # Maximum joint-space accelerations.
+    max_joint_acceleration:
+      - 8.6
+      - 8.6
+      - 8.6
+      - 8.6
+      - 8.6
+      - 8.6
+      - 8.6
+    command_interfaces: ["position"]
+    # Padding (in radians) added to joint position limits as a safety margin.
+    joint_limit_position_tolerance: 0.02
+    # Stop motion if no new command arrives within this many seconds.
+    command_timeout: 0.2
+    # Rate in Hz at which the controller publishes its state.
+    state_publish_rate: 20
