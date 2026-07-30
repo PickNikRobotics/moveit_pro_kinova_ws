@@ -1,14 +1,17 @@
 <?xml version="1.0" ?>
 <package format="3">
   <name>kinova_gen3_mock</name>
-  <version>6.5.0</version>
+  <version>10.0.0</version>
 
-  <description>Mock-hardware boilerplate configuration for a Kinova Gen3 7DoF arm with the integrated wrist Vision Module. No gripper or external sensors are mounted.</description>
+  <description>
+    Mock-hardware boilerplate configuration for a Kinova Gen3 7DoF arm with the
+    integrated wrist Vision Module. No gripper or external sensors are mounted.
+  </description>
 
   <maintainer email="david.yackzan@picknik.ai">David Yackzan</maintainer>
   <maintainer email="paul.gesel@picknik.ai">Paul Gesel</maintainer>
 
-  <license>BSD-3</license>
+  <license>BSD-3-Clause</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
@@ -36,6 +39,7 @@
   <test_depend>rosbag2_storage_default_plugins</test_depend>
   <test_depend>ament_cmake_pytest</test_depend>
   <test_depend>moveit_studio_utils_py</test_depend>
+  <test_depend>python3-yaml</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

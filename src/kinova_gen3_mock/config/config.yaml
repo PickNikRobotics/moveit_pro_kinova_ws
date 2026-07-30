@@ -48,7 +48,21 @@ hardware:
       - dof: "7"
       # Enable the Kinova-integrated wrist Vision Module.
       - vision: "true"
-      - robot_ip: ""
+      # Never give a urdf_param an empty-string value here. SystemConfigParser's
+      # merge() matches an inherited list entry with `if item.get(key)`, a
+      # truthiness test rather than a key-presence test, so a falsy value never
+      # matches and a child's override is appended alongside this entry instead of
+      # replacing it. The duplicate then resolves by list order alone. Mock
+      # hardware ignores robot_ip, so use an unroutable placeholder;
+      # kinova_gen3_hw overrides it with the real address.
+      - robot_ip: "0.0.0.0"
+      # Kinova factory-default credentials. On the hardware path these are
+      # rendered into the <hardware> block of the generated URDF and published on
+      # /robot_description, which is readable by every node on the DDS domain and
+      # by any web UI session. Change the credentials in the arm's Kortex web
+      # interface and override these in your own config package, and keep the arm
+      # on an isolated robot subnet. See "Robot credentials and network" in the
+      # workspace README.
       - username: "admin"
       - password: "admin"
       - port: "10000"

@@ -1,11 +1,11 @@
 <?xml version="1.0" ?>
 <package format="3">
   <name>kinova_gen3_hw</name>
-  <version>5.1.0</version>
+  <version>10.0.0</version>
 
   <description>
     Hardware configuration for a Kinova Gen3 7DoF arm running on the real Kortex
-    driver. Inherits from kinova_gen3_sim and overrides only the
+    driver. Inherits from kinova_gen3_mock and overrides only the
     hardware-specific fields.
   </description>
 
@@ -16,7 +16,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>kinova_gen3_sim</depend>
+  <depend>kinova_gen3_mock</depend>
 
   <exec_depend>kinova_pstop_manager</exec_depend>
   <exec_depend>kinova_vision</exec_depend>
