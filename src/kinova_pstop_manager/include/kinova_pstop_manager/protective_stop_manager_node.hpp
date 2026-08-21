@@ -1,8 +1,8 @@
 // Copyright 2022 PickNik Inc.
-// All rights reserved.
 //
-// Unauthorized copying of this code base via any medium is strictly prohibited.
-// Proprietary and confidential.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the conditions in the repository's
+// BSD 3-Clause LICENSE file are met.
 
 // Implementing this feature as a node that provides a service that calls other ROS services is not ideal.  Please see
 // the README for a discussion of alternatives.

@@ -1,8 +1,8 @@
 # Copyright 2023 PickNik Inc.
-# All rights reserved.
 #
-# Unauthorized copying of this code base via any medium is strictly prohibited.
-# Proprietary and confidential.
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the conditions in the repository's
+# BSD 3-Clause LICENSE file are met.
 
 import unittest
 import yaml
