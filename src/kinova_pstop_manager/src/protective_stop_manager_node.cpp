@@ -1,8 +1,8 @@
 // Copyright 2022 PickNik Inc.
-// All rights reserved.
 //
-// Unauthorized copying of this code base via any medium is strictly prohibited.
-// Proprietary and confidential.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the conditions in the repository's
+// BSD 3-Clause LICENSE file are met.
 
 #include <kinova_pstop_manager/protective_stop_manager_node.hpp>
 
