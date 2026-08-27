@@ -7,8 +7,6 @@ install(
   DIRECTORY
     config
     launch
-    objectives
-    waypoints
   DESTINATION
     share/${PROJECT_NAME}
 )
