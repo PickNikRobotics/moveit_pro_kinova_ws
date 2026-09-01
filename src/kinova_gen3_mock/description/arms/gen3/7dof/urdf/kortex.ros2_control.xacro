@@ -145,6 +145,28 @@
         </xacro:if>
       </xacro:unless>
       </xacro:unless>
+
+      <!-- These state values are set in order for the robot to be teleoperable in mock with the VFC -->
+      <sensor name="fts">
+        <state_interface name="force.x">
+          <param name="initial_value">1.0</param>
+        </state_interface>
+        <state_interface name="force.y">
+          <param name="initial_value">1.0</param>
+        </state_interface>
+        <state_interface name="force.z">
+          <param name="initial_value">1.0</param>
+        </state_interface>
+        <state_interface name="torque.x">
+          <param name="initial_value">1.0</param>
+        </state_interface>
+        <state_interface name="torque.y">
+          <param name="initial_value">1.0</param>
+        </state_interface>
+        <state_interface name="torque.z">
+          <param name="initial_value">1.0</param>
+        </state_interface>
+      </sensor>
     </ros2_control>
   </xacro:macro>
 

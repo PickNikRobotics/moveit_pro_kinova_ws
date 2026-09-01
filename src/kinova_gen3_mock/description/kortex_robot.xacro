@@ -28,7 +28,7 @@
     moveit_active:=false">
 
     <!-- Include and load arm macro files -->
-    <xacro:include filename="$(find kortex_description)/arms/${arm}/${dof}dof/urdf/${arm}_macro.xacro" />
+    <xacro:include filename="$(find kinova_gen3_mock)/description/arms/${arm}/${dof}dof/urdf/${arm}_macro.xacro" />
 
     <!-- Load the arm -->
     <xacro:load_arm

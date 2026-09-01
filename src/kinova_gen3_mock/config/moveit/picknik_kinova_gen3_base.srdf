@@ -11,6 +11,10 @@
     <group name="manipulator">
         <chain base_link="base_link" tip_link="grasp_link"/>
     </group>
+    <group name="gripper">
+        <chain base_link="end_effector_link" tip_link="grasp_link"/>
+    </group>
+    <end_effector name="gripper" parent_link="end_effector_link" group="gripper"/>
 
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="base_link" link2="shoulder_link" reason="Adjacent"/>
