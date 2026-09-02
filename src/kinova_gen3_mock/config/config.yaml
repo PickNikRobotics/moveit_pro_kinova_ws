@@ -48,6 +48,8 @@ hardware:
       - dof: "7"
       # Enable the Kinova-integrated wrist Vision Module.
       - vision: "true"
+      - gripper: "robotiq_2f_85"
+      - gripper_joint_name: "robotiq_85_left_knuckle_joint"
       - robot_ip: ""
       - username: "admin"
       - password: "admin"
@@ -98,6 +100,7 @@ ros2_control:
   # Load and start these controllers so they can be used immediately.
   controllers_active_at_startup:
     - "joint_state_broadcaster"
+    - "robotiq_gripper_controller"
   controllers_inactive_at_startup:
     - "joint_trajectory_controller"
     - "joint_trajectory_admittance_controller"

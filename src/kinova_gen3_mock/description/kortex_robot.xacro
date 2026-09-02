@@ -16,6 +16,11 @@
     port_realtime
     session_inactivity_timeout_ms
     connection_inactivity_timeout_ms
+    gripper:=robotiq_2f_85
+    gripper_joint_name:=robotiq_85_left_knuckle_joint
+    gripper_max_velocity:=100.0
+    gripper_max_force:=100.0
+    use_internal_bus_gripper_comm:=false
     use_fake_hardware:=false
     fake_sensor_commands:=false
     sim_gazebo:=false
@@ -47,23 +52,42 @@
       fake_sensor_commands="${fake_sensor_commands}"
       sim_gazebo="${sim_gazebo}"
       sim_isaac="${sim_isaac}"
-      gripper=""
-      gripper_joint_name=""
+      gripper="${gripper}"
+      gripper_joint_name="${gripper_joint_name}"
+      gripper_max_velocity="${gripper_max_velocity}"
+      gripper_max_force="${gripper_max_force}"
+      use_internal_bus_gripper_comm="${use_internal_bus_gripper_comm}"
       use_external_cable="${use_external_cable}"
       initial_positions="${initial_positions}">
       <xacro:insert_block name="origin" />
     </xacro:load_arm>
 
-    <!-- Boilerplate has no gripper; expose tool_frame at the wrist. Branches
-         that add a gripper override gripper / gripper_joint_name and bring in
-         their own gripper xacro to override this section. -->
-    <link name="${prefix}tool_frame"/>
-    <joint name="${prefix}tool_frame_joint" type="fixed">
-      <origin xyz="0 0 0" rpy="0 0 0" />
-      <parent link="${prefix}${last_arm_link}" />
-      <child link="${prefix}tool_frame" />
-      <axis xyz="0 0 0" />
-    </joint>
+    <!-- If no gripper, define tool frame here -->
+    <xacro:if value="${not gripper}">
+      <link name="${prefix}tool_frame"/>
+      <joint name="${prefix}tool_frame_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <parent link="${prefix}${last_arm_link}" />
+        <child link="${prefix}tool_frame" />
+        <axis xyz="0 0 0" />
+      </joint>
+    </xacro:if>
+
+    <!-- Include and load the gripper if defined -->
+    <xacro:unless value="${not gripper}">
+      <xacro:include filename="$(find kinova_gen3_mock)/description/grippers/${gripper}/urdf/${gripper}_macro.xacro" />
+      <xacro:load_gripper
+        parent="${prefix}${last_arm_link}"
+        prefix="${prefix}"
+        use_fake_hardware="${use_fake_hardware}"
+        fake_sensor_commands="${fake_sensor_commands}"
+        sim_gazebo="${sim_gazebo}"
+        sim_isaac="${sim_isaac}"
+        isaac_joint_commands="${isaac_joint_commands}"
+        isaac_joint_states="${isaac_joint_states}"
+        use_internal_bus_gripper_comm="${use_internal_bus_gripper_comm}"
+        moveit_active="${moveit_active}"/>
+    </xacro:unless>
 
   </xacro:macro>
 

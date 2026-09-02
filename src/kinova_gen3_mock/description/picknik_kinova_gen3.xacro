@@ -4,6 +4,11 @@
     <xacro:arg name="arm" default="gen3" />
     <xacro:arg name="dof" default="7" />
     <xacro:arg name="vision" default="true" />
+    <xacro:arg name="gripper" default="robotiq_2f_85" />
+    <xacro:arg name="gripper_joint_name" default="robotiq_85_left_knuckle_joint" />
+    <xacro:arg name="gripper_max_velocity" default="100.0" />
+    <xacro:arg name="gripper_max_force" default="100.0" />
+    <xacro:arg name="use_internal_bus_gripper_comm" default="false" />
     <xacro:arg name="robot_ip" default="yyy.yyy.yyy.yyy" />
     <xacro:arg name="username" default="admin" />
     <xacro:arg name="password" default="admin" />
@@ -40,14 +45,18 @@
     <!-- convert to property to use substitution in function -->
     <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
 
-    <!-- Load the robot. No gripper is mounted in this boilerplate config; the
-         Kinova-integrated wrist Vision Module is enabled via vision="true". -->
+    <!-- Load the robot -->
     <xacro:load_robot
       parent="world"
       prefix="$(arg prefix)"
       arm="$(arg arm)"
       dof="$(arg dof)"
       vision="$(arg vision)"
+      gripper="$(arg gripper)"
+      gripper_joint_name="$(arg gripper_joint_name)"
+      gripper_max_velocity="$(arg gripper_max_velocity)"
+      gripper_max_force="$(arg gripper_max_force)"
+      use_internal_bus_gripper_comm="$(arg use_internal_bus_gripper_comm)"
       robot_ip="$(arg robot_ip)"
       username="$(arg username)"
       password="$(arg password)"
@@ -70,15 +79,23 @@
       <origin xyz="0 0 -0.145" rpy="0 0 0"/>
     </xacro:cube>
 
-    <!-- Convenience alias for motion-planning-relevant tool point. The
-         kortex_robot macro defines $(prefix)tool_frame at the wrist when no
-         gripper is mounted; we expose it as grasp_link so existing config files
-         (control, jtac, etc.) keep working when a gripper is added later. -->
-    <link name="$(arg prefix)grasp_link"/>
-    <joint name="$(arg prefix)grasp_link_joint" type="fixed">
-      <parent link="$(arg prefix)tool_frame"/>
-      <child link="$(arg prefix)grasp_link"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-    </joint>
+    <!-- Motion planning grasp link -->
+    <xacro:if value="${not '$(arg gripper)'}">
+      <link name="$(arg prefix)grasp_link"/>
+      <joint name="$(arg prefix)grasp_link_joint" type="fixed">
+        <parent link="$(arg prefix)tool_frame"/>
+        <child link="$(arg prefix)grasp_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </joint>
+    </xacro:if>
+    <xacro:unless value="${not '$(arg gripper)'}">
+      <!-- When gripper is mounted, attach grasp_link at the TCP of the gripper -->
+      <link name="$(arg prefix)grasp_link"/>
+      <joint name="$(arg prefix)grasp_link_joint" type="fixed">
+        <parent link="$(arg prefix)robotiq_85_base_link"/>
+        <child link="$(arg prefix)grasp_link"/>
+        <origin xyz="0 0 0.134" rpy="0 0 0"/>
+      </joint>
+    </xacro:unless>
 
 </robot>
