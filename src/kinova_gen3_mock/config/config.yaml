@@ -21,21 +21,21 @@ hardware:
 
   # Specify additional launch files for running the robot with real hardware.
   # [Optional, defaults to a blank launch file if not specified]
-  robot_driver_persist_launch_file:
-    package: "kinova_gen3_mock"
-    path: "launch/robot_drivers_to_persist.launch.py"
+  # robot_driver_persist_launch_file:
+  #   package: "kinova_gen3_mock"
+  #   path: "launch/robot_drivers_to_persist.launch.py"
 
   # Specify any additional launch files for running the robot in simulation mode.
   # Used when hardware.simulated is True.
   # [Optional, defaults to a blank launch file if not specified]
   simulated_robot_driver_persist_launch_file:
     package: "kinova_gen3_mock"
-    path: "launch/sim/robot_drivers_to_persist_sim.launch.py"
-  simulated_hardware_launch_file:
-    package: "moveit_studio_agent"
-    path: "launch/blank.launch.py"
+    path: "launch/robot_drivers_to_persist_sim.launch.py"
+  # simulated_hardware_launch_file:
+  #   package: "moveit_studio_agent"
+  #   path: "launch/blank.launch.py"
 
-  # These Params are pasted to the XACRO to create the URDF
+  # These Params are passed to the XACRO to create the URDF
   robot_description:
     urdf:
       package: "kinova_gen3_mock"
@@ -44,20 +44,7 @@ hardware:
       package: "kinova_gen3_mock"
       path: "config/moveit/picknik_kinova_gen3_base.srdf"
     urdf_params:
-      - arm: "gen3"
-      - dof: "7"
-      # Enable the Kinova-integrated wrist Vision Module.
       - vision: "true"
-      - gripper: "robotiq_2f_85"
-      - gripper_joint_name: "robotiq_85_left_knuckle_joint"
-      - robot_ip: ""
-      - username: "admin"
-      - password: "admin"
-      - port: "10000"
-      - port_realtime: "10001"
-      - session_inactivity_timeout_ms: "60000"
-      - connection_inactivity_timeout_ms: "2000"
-      - use_fake_hardware: "true"
       - fake_sensor_commands: "false"
 
 # This Configures moveit params that are in moveit_config.py
