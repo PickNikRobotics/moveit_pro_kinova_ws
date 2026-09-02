@@ -11,14 +11,24 @@
     *origin
     dof:=7
     vision:=true
+    use_fake_hardware:=false
     fake_sensor_commands:=false
+    mujoco_model:=description/mujoco/scene.xml
+    mujoco_model_package:=kinova_gen3_sim
+    mujoco_viewer:=false
+    mujoco_keyframe:=default
     initial_positions:=${dict(joint_1=0.0,joint_2=0.0,joint_3=0.0,joint_4=0.0,joint_5=0.0,joint_6=0.0,joint_7=0.0)}">
 
     <!-- ros2 control include -->
     <xacro:include filename="$(find kinova_gen3_mock)/description/arms/gen3/7dof/urdf/kortex.ros2_control.xacro" />
     <xacro:kortex_ros2_control
       name="${prefix}KortexMultiInterfaceHardware" prefix="${prefix}"
+      use_fake_hardware="${use_fake_hardware}"
       fake_sensor_commands="${fake_sensor_commands}"
+      mujoco_model="${mujoco_model}"
+      mujoco_model_package="${mujoco_model_package}"
+      mujoco_viewer="${mujoco_viewer}"
+      mujoco_keyframe="${mujoco_keyframe}"
       initial_positions="${initial_positions}"/>
 
     <joint name="${prefix}base_joint" type="fixed">

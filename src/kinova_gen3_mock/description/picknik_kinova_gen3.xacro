@@ -3,7 +3,12 @@
     <!-- Arguments for Kinova -->
     <xacro:arg name="prefix" default="" />
     <xacro:arg name="vision" default="true" />
+    <xacro:arg name="use_fake_hardware" default="false" />
     <xacro:arg name="fake_sensor_commands" default="false" />
+    <xacro:arg name="mujoco_model" default="description/mujoco/scene.xml" />
+    <xacro:arg name="mujoco_model_package" default="kinova_gen3_sim" />
+    <xacro:arg name="mujoco_viewer" default="false" />
+    <xacro:arg name="mujoco_keyframe" default="default" />
 
     <!-- Import macros for main hardware components -->
     <xacro:include filename="$(find kinova_gen3_mock)/description/kortex_robot.xacro" />
@@ -23,7 +28,12 @@
       parent="world"
       prefix="$(arg prefix)"
       vision="$(arg vision)"
+      use_fake_hardware="$(arg use_fake_hardware)"
       fake_sensor_commands="$(arg fake_sensor_commands)"
+      mujoco_model="$(arg mujoco_model)"
+      mujoco_model_package="$(arg mujoco_model_package)"
+      mujoco_viewer="$(arg mujoco_viewer)"
+      mujoco_keyframe="$(arg mujoco_keyframe)"
       initial_positions="${xacro.load_yaml(initial_positions_file)}" >
       <origin xyz="0 0 0.0" rpy="0 0 0" />
     </xacro:load_robot>

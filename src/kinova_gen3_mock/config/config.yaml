@@ -113,7 +113,7 @@ objectives:
     perception_objectives:
       package_name: "moveit_pro_objectives"
       relative_path: "objectives/perception"
-    sim_objectives:
+    mock_objectives:
       package_name: "kinova_gen3_mock"
       relative_path: "objectives"
   waypoints_file:
