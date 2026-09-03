@@ -9,6 +9,19 @@
     <xacro:arg name="mujoco_model_package" default="kinova_gen3_sim" />
     <xacro:arg name="mujoco_viewer" default="false" />
     <xacro:arg name="mujoco_keyframe" default="default" />
+    <xacro:arg name="robot_ip" default="192.168.1.10" />
+    <xacro:arg name="username" default="admin" />
+    <xacro:arg name="password" default="admin" />
+    <xacro:arg name="port" default="10000" />
+    <xacro:arg name="port_realtime" default="10001" />
+    <xacro:arg name="session_inactivity_timeout_ms" default="60000" />
+    <xacro:arg name="connection_inactivity_timeout_ms" default="2000" />
+    <xacro:arg name="tf_prefix" default="" />
+    <xacro:arg name="use_internal_bus_gripper_comm" default="false" />
+    <xacro:arg name="gripper" default="robotiq_2f_85" />
+    <xacro:arg name="gripper_joint_name" default="robotiq_85_left_knuckle_joint" />
+    <xacro:arg name="gripper_max_velocity" default="100.0" />
+    <xacro:arg name="gripper_max_force" default="100.0" />
 
     <!-- Import macros for main hardware components -->
     <xacro:include filename="$(find kinova_gen3_mock)/description/kortex_robot.xacro" />
@@ -34,7 +47,20 @@
       mujoco_model_package="$(arg mujoco_model_package)"
       mujoco_viewer="$(arg mujoco_viewer)"
       mujoco_keyframe="$(arg mujoco_keyframe)"
-      initial_positions="${xacro.load_yaml(initial_positions_file)}" >
+      initial_positions="${xacro.load_yaml(initial_positions_file)}"
+      robot_ip="$(arg robot_ip)"
+      username="$(arg username)"
+      password="$(arg password)"
+      port="$(arg port)"
+      port_realtime="$(arg port_realtime)"
+      session_inactivity_timeout_ms="$(arg session_inactivity_timeout_ms)"
+      connection_inactivity_timeout_ms="$(arg connection_inactivity_timeout_ms)"
+      tf_prefix="$(arg tf_prefix)"
+      use_internal_bus_gripper_comm="$(arg use_internal_bus_gripper_comm)"
+      gripper="$(arg gripper)"
+      gripper_joint_name="$(arg gripper_joint_name)"
+      gripper_max_velocity="$(arg gripper_max_velocity)"
+      gripper_max_force="$(arg gripper_max_force)" >
       <origin xyz="0 0 0.0" rpy="0 0 0" />
     </xacro:load_robot>
 

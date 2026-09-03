@@ -12,23 +12,39 @@ based_on_package: "kinova_gen3_sim"
 hardware:
   simulated: False
 
-  robot_driver_persist_launch_file:
-    package: "kinova_gen3_hw"
-    path: "launch/robot_drivers_to_persist.launch.py"
-
   robot_description:
     urdf_params:
       - robot_ip: "192.168.1.10"
+      - username: "admin"
+      - password: "admin"
+      - port: "10000"
+      - port_realtime: "10001"
+      - session_inactivity_timeout_ms: "60000"
+      - connection_inactivity_timeout_ms: "2000"
+      - tf_prefix: ""
+      - use_internal_bus_gripper_comm: "false"
+      - gripper: "robotiq_2f_85"
+      - gripper_joint_name: "robotiq_85_left_knuckle_joint"
+      - gripper_max_velocity: "100.0"
+      - gripper_max_force: "100.0"
       - use_fake_hardware: "false"
       - fake_sensor_commands: "false"
 
-moveit_params:
-  joint_limits:
+ros2_control:
+  config:
     package: "kinova_gen3_hw"
-    path: "config/moveit/joint_limits.yaml"
-  pose_jog:
-    package: "kinova_gen3_hw"
-    path: "config/moveit/pose_jog.yaml"
-  joint_jog:
-    package: "kinova_gen3_hw"
-    path: "config/moveit/joint_jog.yaml"
+    path: "config/control/picknik_kinova_gen3.ros2_control.yaml"
+  controllers_active_at_startup:
+    - "joint_state_broadcaster"
+    - "robotiq_gripper_controller"
+  controllers_inactive_at_startup:
+    - "joint_trajectory_controller"
+    - "joint_trajectory_admittance_controller"
+    - "velocity_force_controller"
+    - "joint_velocity_controller"
+
+objectives:
+  objective_library_paths:
+    hw_objectives:
+      package_name: "kinova_gen3_hw"
+      relative_path: "objectives"
