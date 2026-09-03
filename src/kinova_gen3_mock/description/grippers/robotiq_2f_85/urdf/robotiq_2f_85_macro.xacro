@@ -3,6 +3,8 @@
   <xacro:macro name="load_gripper" params="
     parent
     prefix
+    use_fake_hardware:=false
+    use_internal_bus_gripper_comm:=false
     fake_sensor_commands:=false">
     <xacro:include filename="$(find robotiq_description)/urdf/robotiq_2f_85_macro.urdf.xacro" />
 
@@ -10,9 +12,9 @@
         name="RobotiqGripperHardwareInterface"
         prefix="${prefix}"
         parent="${parent}"
-        include_ros2_control="true"
+        include_ros2_control="${not use_internal_bus_gripper_comm}"
         com_port="/dev/ttyUSB0"
-        use_fake_hardware="true"
+        use_fake_hardware="${use_fake_hardware}"
         fake_sensor_commands="${fake_sensor_commands}">
         <origin xyz="0 0 0" rpy="0 0 0" />
     </xacro:robotiq_gripper>
