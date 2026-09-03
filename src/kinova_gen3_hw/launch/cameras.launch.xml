@@ -3,6 +3,7 @@
   <include
     file="$(find-pkg-share kinova_vision)/launch/kinova_vision.launch.py"
   >
+    <arg name="device" value="192.168.11.11" />
     <arg name="camera" value="wrist_camera" />
     <arg name="depth_registration" value="true" />
     <arg name="max_color_pub_rate" value="6.0" />
