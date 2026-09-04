@@ -71,15 +71,13 @@ Add-ons such as a gripper, an external RealSense, or full demos belong on their 
 
 ## Known gaps
 
-- **`kinova_gen3_sim` cannot start.** It fails during URDF generation with `Xacro conditional "${use_fake_hardware}" evaluated to "%>> hardware.simulated", which is not a boolean expression`.
-  The `%>>` cross-reference syntax its `use_fake_hardware` uses was removed in MoveIt Pro 6.0.0 and nothing implements it any more, so the literal string reaches a xacro conditional. It fails loudly rather than mis-launching.
-- **`kinova_gen3_sim` would not run MuJoCo even once that is fixed.** Its `mujoco_model` / `mujoco_keyframe` / `mujoco_viewer` params are declared as xacro args but never consumed, so nothing emits a `<ros2_control>` block with the `picknik_mujoco_ros/MujocoSystem` plugin.
+- **`kinova_gen3_sim` does not run MuJoCo.** It loads and runs as a second mock-hardware config. Its `mujoco_model` / `mujoco_keyframe` / `mujoco_viewer` params are declared as xacro args but never consumed, so nothing emits a `<ros2_control>` block with the `picknik_mujoco_ros/MujocoSystem` plugin.
   Wiring it up means suppressing the `<ros2_control>` block that `ros2_kortex`'s `load_arm` macro emits unconditionally — the pinned `main-picknik` SHA has no `include_ros2_control` argument.
 - **`kinova_gen3_sim` still carries space-satellite demo content**: landsat and rafti MuJoCo scenes and assets in `description/mujoco/`, AprilTag registration / compliant-grasp / force-torque Objectives in `objectives/`, an unused `config/moveit/` (its `config.yaml` declares no `moveit_params`), and 20 Franka Panda meshes in `meshes/`.
   None of it is loaded by the bare-arm boilerplate, and it belongs on a demo branch rather than on `main`.
 - **`fanuc` is checked out as its own submodule** under `src/external_dependencies/`, even though no Kinova config uses it.
   It is a separate entry rather than only a nested one so `catkin_pkg.find_packages` can reach `fanuc_lrmate200id_support`, which `picknik_accessories` declares a rosdep on; see the comment in `.gitmodules`.
-- **No force-torque sensor.** The pinned `ros2_kortex` declares no `<sensor>`, so JTAC and VFC run with `ft_sensor_name` unset.
+- **No force-torque sensor.** The pinned `ros2_kortex` declares no `<sensor>`, so JTAC and VFC run with `ft_sensor_names` unset.
   They degrade gracefully into a trajectory controller and a Cartesian jog controller, which is what PoseJog and JointJog need, but any Behavior port that depends on force sensing — `absolute_force_torque_threshold` stop-on-contact in particular — is a silent no-op.
   No Objective shipped here sets one; if you add one, it will not protect you.
 - **`grasp_link` sits on the wrist flange face** while no gripper is mounted, so a Cartesian goal placed flat on a surface puts `bracelet_link` geometry in contact with it and reports the goal state in collision.

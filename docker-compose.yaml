@@ -9,8 +9,9 @@ services:
   # The base image that all MoveIt Pro services extend off of. Builds the user workspace.
   base: {}
 
-  # Starts the MoveIt Pro Agent and the Bridge between the Agent and the Web UI.
-  agent_bridge: {}
+  # Starts the MoveIt Pro Runtime: the Agent and the web bridge the
+  # MoveIt Pro Desktop App connects to.
+  runtime: {}
 
   # Starts the robot drivers.
   drivers:
@@ -18,8 +19,6 @@ services:
       # Allow access to host hardware e.g. RealSense cameras
       - /dev:/dev
 
-  # Starts the web UI frontend.
-  web_ui: {}
 
   # Developer specific configuration when running `moveit_pro dev`.
   dev:

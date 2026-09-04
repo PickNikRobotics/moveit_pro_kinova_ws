@@ -28,6 +28,7 @@ make these tests agree with each other while disagreeing with the Agent.
 """
 
 import re
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
@@ -214,8 +215,8 @@ def test_declared_controllers_are_used(config_package: str) -> None:
 def test_hardware_config_activates_the_fault_controller() -> None:
     """kinova_gen3_hw activates fault_controller, or it boots permanently faulted.
 
-    protective_stop_manager_node, started by the inherited persist launch whenever
-    `simulated` is False, watchdogs /fault_controller/internal_fault and reports a
+    protective_stop_manager_node, started by the hardware config's
+    additional_driver_launch_file, watchdogs /fault_controller/internal_fault and reports a
     NONRECOVERABLE_FAULT once it has seen a message and then goes stale. On mock
     that topic comes from mock_kinova_client_node; on hardware only the real
     fault_controller publishes it. This is the invariant the hardware config hinges
@@ -234,17 +235,113 @@ def test_hardware_config_activates_the_fault_controller() -> None:
 
 
 @pytest.mark.parametrize("config_package", CONFIG_PACKAGES)
-def test_agent_bridge_launch_file_is_present(config_package: str) -> None:
-    """Every config package ships a non-empty launch/agent_bridge.launch.xml.
+def test_runtime_launch_file_is_declared_and_non_empty(config_package: str) -> None:
+    """Every config declares runtime_launch_file, and the file it names has content.
 
-    This file is found by name rather than through a config.yaml key — the compose
-    stack runs `ros2 launch ${MOVEIT_CONFIG_PACKAGE} agent_bridge.launch.xml` — so
-    none of the reference checks above cover it. A missing or empty one is the same
-    failure that a 0-byte bringup.launch.py produced in this workspace.
+    MoveIt Pro 10.0 replaced the by-name `agent_bridge.launch.xml` lookup with a
+    required `runtime_launch_file` config key, so the Runtime launches whatever the
+    config points at. test_referenced_files_exist proves that path resolves, but a
+    0-byte file resolves too — that is exactly the failure a 0-byte bringup.launch.py
+    produced in this workspace — so check the key is present and the file has content.
     """
-    launch_file = PACKAGES[config_package] / "launch" / "agent_bridge.launch.xml"
+    entry = _resolve(config_package).get("runtime_launch_file")
+    assert entry, f"{config_package} does not declare runtime_launch_file"
+    assert "package" in entry and "path" in entry, (
+        f"{config_package}: runtime_launch_file must set both package and path; "
+        f"it is replaced atomically on inheritance, not merged. Got {entry}"
+    )
+    launch_file = PACKAGES[entry["package"]] / entry["path"]
     assert launch_file.is_file(), f"{config_package} is missing {launch_file}"
     assert launch_file.stat().st_size > 0, f"{config_package}: {launch_file} is empty"
+
+
+# Attribute names BT.CPP and the Objective editor reserve for their own use. The
+# REST API rejects a Subtree that declares one as a port, so the editor cannot open
+# the Objective at all.
+RESERVED_PORT_NAMES = frozenset(
+    {"name", "ID", "_autoremap", "_uuid", "_collapsed", "_external", "_skipIf"}
+)
+
+
+def _objective_files() -> list[Path]:
+    """Every Objective XML shipped by a first-party package in this workspace."""
+    return sorted(
+        f for pkg in PACKAGES.values() for f in (pkg / "objectives").glob("*.xml")
+    )
+
+
+def test_objective_ports_declare_no_reserved_names() -> None:
+    """No Subtree declares a reserved attribute as a port.
+
+    `<input_port name="_collapsed"/>` and friends make the Runtime's REST API
+    return HTTP 500 for that Objective, so the editor cannot open it. The tree
+    still loads and runs, so nothing surfaces until someone clicks Edit.
+    """
+    offenders = []
+    for path in _objective_files():
+        for element in ET.parse(path).iter():
+            if element.tag in ("input_port", "output_port", "inout_port"):
+                if element.get("name") in RESERVED_PORT_NAMES:
+                    offenders.append(
+                        f"{path.name}: <{element.tag} name=\"{element.get('name')}\">"
+                    )
+    assert (
+        not offenders
+    ), "Objectives declare reserved attribute names as ports: " + "; ".join(offenders)
+
+
+def test_objectives_load_in_the_objective_editor() -> None:
+    """Every Objective parses with the converter the Runtime's REST API uses.
+
+    Catches the whole class of "the tree runs but the editor returns HTTP 500",
+    which no Behavior-registry or config check sees. Skipped where the REST API
+    package is unavailable, so this stays runnable outside the product image.
+    """
+    converter = pytest.importorskip(
+        "moveit_studio_rest_api.converters.behavior_tree_converter",
+        reason="moveit_studio_rest_api is only present inside the MoveIt Pro image",
+    )
+    failures = []
+    for path in _objective_files():
+        try:
+            converter.BehaviorTreeConverter().from_xml(ET.parse(path).getroot())
+        except Exception as exc:  # noqa: BLE001 - report every offender, not the first
+            failures.append(f"{path.name}: {type(exc).__name__}: {exc}")
+    assert not failures, "Objectives the editor cannot open:\n  " + "\n  ".join(
+        failures
+    )
+
+
+@pytest.mark.parametrize("config_package", CONFIG_PACKAGES)
+def test_srdf_declares_an_end_effector(config_package: str) -> None:
+    """Every config's SRDF declares an end effector, or IMarker teleop draws nothing.
+
+    The Teleoperation IMarker mode binds its gizmo to an end effector declared in
+    the SRDF. With none declared the mode still appears in the UI and its "Reset
+    Interactive Marker" button still responds, but no marker is drawn and nothing
+    is ever dragged -- so no Objective is triggered and the failure leaves no trace
+    in the logs. That silence is why this needs a test rather than a runtime check.
+    """
+    srdf_entry = _resolve(config_package)["hardware"]["robot_description"]["srdf"]
+    srdf = (PACKAGES[srdf_entry["package"]] / srdf_entry["path"]).read_text()
+    # Strip comments first: the SRDF explains this tag in prose above it, and an
+    # unstripped scan matches the prose and reports a malformed declaration.
+    srdf = re.sub(r"<!--.*?-->", "", srdf, flags=re.DOTALL)
+    end_effectors = re.findall(r"<end_effector\b[^>]*>", srdf)
+    assert end_effectors, (
+        f"{config_package}: {srdf_entry['path']} declares no <end_effector>, so the "
+        "Teleoperation IMarker mode will render no marker"
+    )
+    for tag in end_effectors:
+        for attr in ("parent_link", "group"):
+            assert (
+                f"{attr}=" in tag
+            ), f"{config_package}: <end_effector> missing {attr}: {tag}"
+        group = re.search(r'group="([^"]+)"', tag).group(1)
+        assert f'<group name="{group}"' in srdf, (
+            f"{config_package}: <end_effector> names group {group!r}, "
+            "which the SRDF does not define"
+        )
 
 
 @pytest.mark.parametrize("config_package", CONFIG_PACKAGES)

@@ -2,18 +2,8 @@
 #
 #  MoveIt Pro robot configuration: Kinova Gen3 7DoF in MuJoCo simulation.
 #
-#  NOT FUNCTIONAL - this configuration cannot start. It fails
-#  during URDF generation, before MuJoCo would ever be reached:
-#
-#    error: Xacro conditional "${use_fake_hardware}" evaluated to
-#    "%>> hardware.simulated", which is not a boolean expression.
-#
-#  The `%>>` cross-reference syntax on use_fake_hardware below was removed in
-#  MoveIt Pro 6.0.0 and nothing in moveit_studio_utils_py implements it any more,
-#  so the literal string reaches kortex.ros2_control.xacro's xacro:if. This at
-#  least fails loudly rather than silently mis-launching.
-#
-#  Even with that fixed the config would not run MuJoCo: the mujoco_* urdf_params
+#  This configuration loads and runs, but it does NOT run MuJoCo: the mujoco_*
+#  urdf_params
 #  below are declared as xacro args in
 #  kinova_gen3_mock/description/picknik_kinova_gen3.xacro but never consumed, and
 #  nothing emits a <ros2_control> block with the picknik_mujoco_ros/MujocoSystem
@@ -36,12 +26,14 @@
 
 based_on_package: "kinova_gen3_mock"
 
-hardware:
-  simulated: True
+runtime_launch_file:
+  package: "kinova_gen3_sim"
+  path: "launch/runtime.launch.xml"
 
+hardware:
   robot_description:
     urdf_params:
       - mujoco_keyframe: "default"
       - mujoco_model: "description/mujoco/scene.xml"
       - mujoco_viewer: false
-      - use_fake_hardware: "%>> hardware.simulated"
+      - use_fake_hardware: "true"

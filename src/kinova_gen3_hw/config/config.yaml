@@ -6,17 +6,23 @@
 #  real hardware: talk to the arm over the network instead of ros2_control mock
 #  hardware. Adjust robot_ip below for your robot.
 #
-#  Setting simulated to False switches the Agent from
-#  simulated_robot_driver_persist_launch_file to
-#  robot_driver_persist_launch_file; both are inherited from kinova_gen3_mock,
-#  and the latter is what starts the Kortex protective-stop manager.
+#  additional_driver_launch_file is always included, so this config overrides the
+#  mock drivers kinova_gen3_mock ships with kinova_gen3_mock's real-hardware
+#  launch, which is what starts the Kortex protective-stop manager.
 #
 ###############################################################
 
 based_on_package: "kinova_gen3_mock"
 
+runtime_launch_file:
+  package: "kinova_gen3_hw"
+  path: "launch/runtime.launch.xml"
+
 hardware:
-  simulated: False
+  # Real-hardware drivers, replacing the mock drivers the base config ships.
+  additional_driver_launch_file:
+    package: "kinova_gen3_mock"
+    path: "launch/robot_drivers_to_persist.launch.py"
 
   robot_description:
     urdf_params:
@@ -26,7 +32,7 @@ hardware:
 
 ros2_control:
   # Activate the Kortex fault controller. protective_stop_manager_node, started by
-  # the inherited robot_drivers_to_persist.launch.py whenever simulated is False,
+  # the additional_driver_launch_file above,
   # watchdogs /fault_controller/internal_fault on a 0.1 s timer and reports a
   # NONRECOVERABLE_FAULT if nothing publishes it, so without this the arm comes up
   # permanently faulted and protective-stop recovery can never succeed. In mock
