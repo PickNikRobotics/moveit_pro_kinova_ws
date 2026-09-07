@@ -8,9 +8,7 @@ install(
     config
     description
     launch
-    meshes
     objectives
-    waypoints
   DESTINATION
     share/${PROJECT_NAME}
 )
