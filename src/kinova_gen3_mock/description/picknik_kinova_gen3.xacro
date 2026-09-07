@@ -3,7 +3,7 @@
     <!-- Arguments for Kinova -->
     <xacro:arg name="prefix" default="" />
     <xacro:arg name="vision" default="true" />
-    <xacro:arg name="use_fake_hardware" default="false" />
+    <xacro:arg name="hardware_interface" default="mock" />
     <xacro:arg name="fake_sensor_commands" default="false" />
     <xacro:arg name="mujoco_model" default="description/mujoco/scene.xml" />
     <xacro:arg name="mujoco_model_package" default="kinova_gen3_sim" />
@@ -41,7 +41,7 @@
       parent="world"
       prefix="$(arg prefix)"
       vision="$(arg vision)"
-      use_fake_hardware="$(arg use_fake_hardware)"
+      hardware_interface="$(arg hardware_interface)"
       fake_sensor_commands="$(arg fake_sensor_commands)"
       mujoco_model="$(arg mujoco_model)"
       mujoco_model_package="$(arg mujoco_model_package)"

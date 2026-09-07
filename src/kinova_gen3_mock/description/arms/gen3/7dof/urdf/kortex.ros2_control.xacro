@@ -4,7 +4,7 @@
   <xacro:macro name="kortex_ros2_control" params="
     name
     prefix
-    use_fake_hardware:=false
+    hardware_interface:=mock
     fake_sensor_commands:=false
     mujoco_model:=description/mujoco/scene.xml
     mujoco_model_package:=kinova_gen3_sim
@@ -27,37 +27,35 @@
 
     <ros2_control name="${name}" type="system">
       <hardware>
-        <xacro:if value="${use_fake_hardware}">
+        <xacro:if value="${hardware_interface == 'mock'}">
           <plugin>mock_components/GenericSystem</plugin>
           <param name="fake_sensor_commands">${fake_sensor_commands}</param>
           <param name="state_following_offset">0.0</param>
         </xacro:if>
-        <xacro:unless value="${use_fake_hardware}">
-          <xacro:if value="${robot_ip != '' and robot_ip != '0.0.0.0'}">
-            <plugin>kortex_driver/KortexMultiInterfaceHardware</plugin>
-            <param name="robot_ip">${robot_ip}</param>
-            <param name="username">${username}</param>
-            <param name="password">${password}</param>
-            <param name="port">${port}</param>
-            <param name="port_realtime">${port_realtime}</param>
-            <param name="session_inactivity_timeout_ms">${session_inactivity_timeout_ms}</param>
-            <param name="connection_inactivity_timeout_ms">${connection_inactivity_timeout_ms}</param>
-            <param name="tf_prefix">"${tf_prefix}"</param>
-            <param name="use_internal_bus_gripper_comm">${use_internal_bus_gripper_comm}</param>
-            <param name="gripper_joint_name">${gripper_joint_name}</param>
-            <param name="gripper_max_velocity">${gripper_max_velocity}</param>
-            <param name="gripper_max_force">${gripper_max_force}</param>
-          </xacro:if>
-          <xacro:unless value="${robot_ip != '' and robot_ip != '0.0.0.0'}">
-            <plugin>picknik_mujoco_ros/MujocoSystem</plugin>
-            <param name="mujoco_model">${mujoco_model}</param>
-            <param name="mujoco_model_package">${mujoco_model_package}</param>
-            <param name="mujoco_viewer">${mujoco_viewer}</param>
-            <param name="mujoco_keyframe">${mujoco_keyframe}</param>
-            <param name="render_publish_rate">10</param>
-            <param name="tf_publish_rate">60</param>
-          </xacro:unless>
-        </xacro:unless>
+        <xacro:if value="${hardware_interface == 'kortex'}">
+          <plugin>kortex_driver/KortexMultiInterfaceHardware</plugin>
+          <param name="robot_ip">${robot_ip}</param>
+          <param name="username">${username}</param>
+          <param name="password">${password}</param>
+          <param name="port">${port}</param>
+          <param name="port_realtime">${port_realtime}</param>
+          <param name="session_inactivity_timeout_ms">${session_inactivity_timeout_ms}</param>
+          <param name="connection_inactivity_timeout_ms">${connection_inactivity_timeout_ms}</param>
+          <param name="tf_prefix">"${tf_prefix}"</param>
+          <param name="use_internal_bus_gripper_comm">${use_internal_bus_gripper_comm}</param>
+          <param name="gripper_joint_name">${gripper_joint_name}</param>
+          <param name="gripper_max_velocity">${gripper_max_velocity}</param>
+          <param name="gripper_max_force">${gripper_max_force}</param>
+        </xacro:if>
+        <xacro:if value="${hardware_interface == 'mujoco'}">
+          <plugin>picknik_mujoco_ros/MujocoSystem</plugin>
+          <param name="mujoco_model">${mujoco_model}</param>
+          <param name="mujoco_model_package">${mujoco_model_package}</param>
+          <param name="mujoco_viewer">${mujoco_viewer}</param>
+          <param name="mujoco_keyframe">${mujoco_keyframe}</param>
+          <param name="render_publish_rate">10</param>
+          <param name="tf_publish_rate">60</param>
+        </xacro:if>
       </hardware>
       <joint name="${prefix}joint_1">
         <command_interface name="position">
@@ -137,21 +135,15 @@
         <state_interface name="effort"/>
       </joint>
 
-      <xacro:unless value="${use_fake_hardware}">
-        <xacro:if value="${robot_ip != '' and robot_ip != '0.0.0.0'}">
-          <xacro:unless value="${not gripper}">
-            <xacro:if value="${use_internal_bus_gripper_comm}">
-              <joint name="${prefix}${gripper_joint_name}">
-                <command_interface name="position" />
-                <state_interface name="position"/>
-                <state_interface name="velocity"/>
-              </joint>
-            </xacro:if>
-          </xacro:unless>
-        </xacro:if>
-      </xacro:unless>
+      <xacro:if value="${hardware_interface == 'kortex' and gripper and use_internal_bus_gripper_comm}">
+        <joint name="${prefix}${gripper_joint_name}">
+          <command_interface name="position" />
+          <state_interface name="position"/>
+          <state_interface name="velocity"/>
+        </joint>
+      </xacro:if>
 
-      <xacro:if value="${use_fake_hardware or robot_ip == '' or robot_ip == '0.0.0.0'}">
+      <xacro:if value="${hardware_interface == 'mock' or hardware_interface == 'mujoco'}">
         <!-- These state values are set for mock and MuJoCo teleoperation with the VFC. -->
         <sensor name="fts">
           <state_interface name="force.x">

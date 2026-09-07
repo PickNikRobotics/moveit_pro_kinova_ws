@@ -44,6 +44,7 @@ hardware:
       package: "kinova_gen3_mock"
       path: "config/moveit/picknik_kinova_gen3_base.srdf"
     urdf_params:
+      - hardware_interface: "mock"
       - vision: "true"
       - fake_sensor_commands: "false"
 

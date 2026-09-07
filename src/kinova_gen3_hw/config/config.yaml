@@ -15,6 +15,7 @@ hardware:
 
   robot_description:
     urdf_params:
+      - hardware_interface: "kortex"
       - robot_ip: "192.168.11.11"
       - username: "admin"
       - password: "admin"
@@ -28,8 +29,6 @@ hardware:
       - gripper_joint_name: "robotiq_85_left_knuckle_joint"
       - gripper_max_velocity: "100.0"
       - gripper_max_force: "100.0"
-      - use_fake_hardware: "false"
-      - fake_sensor_commands: "false"
 
 ros2_control:
   config:

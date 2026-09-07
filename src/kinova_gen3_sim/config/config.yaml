@@ -12,11 +12,11 @@ hardware:
 
   robot_description:
     urdf_params:
+      - hardware_interface: "mujoco"
       - mujoco_keyframe: "default"
       - mujoco_model: "description/mujoco/scene.xml"
       - mujoco_model_package: "kinova_gen3_sim"
       - mujoco_viewer: false
-      - use_fake_hardware: "false"
 
 ros2_control:
   config:
