@@ -58,10 +58,11 @@ RUN groupadd realtime && \
 # Install additional dependencies
 # You can also add any necessary apt-get install, pip install, etc. commands at this point.
 RUN apt-get update && apt-get install -q -y --no-install-recommends \
-    gstreamer1.0-tools \
-    gstreamer1.0-libav \
-    gstreamer1.0-plugins-base \
-    gstreamer1.0-plugins-good
+    gstreamer1.0-tools=1.20.3-0ubuntu1.1 \
+    gstreamer1.0-libav=1.20.3-0ubuntu1 \
+    gstreamer1.0-plugins-base=1.20.1-1ubuntu0.6 \
+    gstreamer1.0-plugins-good=1.20.3-0ubuntu1.7 && \
+    rm -rf /var/lib/apt/lists/*
 
 # NOTE: The /opt/overlay_ws folder contains MoveIt Pro binary packages and the source file.
 # hadolint ignore=SC1091

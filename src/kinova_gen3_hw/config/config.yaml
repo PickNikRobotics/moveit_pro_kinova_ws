@@ -10,6 +10,7 @@
 based_on_package: "kinova_gen3_sim"
 
 hardware:
+
   simulated: False
 
   robot_description:
