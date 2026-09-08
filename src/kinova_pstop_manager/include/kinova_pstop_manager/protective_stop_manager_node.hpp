@@ -76,7 +76,29 @@ private:
   rclcpp::TimerBase::SharedPtr fault_status_timer_;
   std::atomic<bool> in_fault_;
 
-  // time measurement
+  // Whether the fault controller has published at least once. Until it has, the
+  // staleness watchdog in publishFaultStatus() has no baseline to compare against,
+  // and it is suppressed for at most kStartupGracePeriodSec.
+  std::atomic<bool> fault_status_received_;
+
+  // How long after startup the fault controller may not have published yet, from
+  // the startup_grace_period_sec parameter.
+  double startup_grace_period_sec_;
+
+  // Steady clock for the startup grace period only. Deliberately not the node
+  // clock: a simulated clock that never advances would leave the grace period
+  // permanently unexpired.
+  rclcpp::Clock steady_clock_;
+  rclcpp::Time start_time_;
+
+  // Stamped by the fault topic subscription with the node clock, so the staleness
+  // comparison in publishFaultStatus() must use the node clock too.
+  //
+  // Written only by that subscription and read only by the fault status timer. Both
+  // run in this node's default mutually exclusive callback group, so they never
+  // overlap even under a multi-threaded executor and no synchronization is
+  // required. The neighbouring atomics are belt-and-braces on the same invariant;
+  // do not read their presence as evidence that this one races.
   rclcpp::Time last_fault_status_update_;
 
   // connect to the fault_controller that is communication pipe to/from the driver

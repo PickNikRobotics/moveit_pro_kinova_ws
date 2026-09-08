@@ -4,9 +4,24 @@
 #
 # docker build -f ./Dockerfile .
 #
+# Pin to a specific MoveIt Pro release rather than taking the default:
+#
+# docker build --build-arg MOVEIT_DOCKER_TAG=10.0.0 -f ./Dockerfile .
+#
 
 # Specify the MoveIt Pro release to build on top of.
-ARG MOVEIT_PRO_BASE_IMAGE=picknikciuser/moveit-studio:${MOVEIT_DOCKER_TAG:-main}-${MOVEIT_ROS_DISTRO:-humble}
+#
+# MOVEIT_DOCKER_TAG and MOVEIT_ROS_DISTRO must be declared here, before the ARG
+# that references them. An undeclared variable inside a pre-FROM ARG default
+# expands to empty, so `--build-arg MOVEIT_DOCKER_TAG=...` would be silently
+# ignored and the `:-` fallback would always win.
+#
+# The default tag is the floating `main`, which moves. Pin it to the release you
+# validated your robot against before deploying. The `moveit_pro` CLI passes
+# MOVEIT_PRO_BASE_IMAGE explicitly and overrides all of this.
+ARG MOVEIT_DOCKER_TAG=main
+ARG MOVEIT_ROS_DISTRO=jazzy
+ARG MOVEIT_PRO_BASE_IMAGE=picknikciuser/moveit-pro:${MOVEIT_DOCKER_TAG}-${MOVEIT_ROS_DISTRO}
 ARG USERNAME=moveit-pro-user
 ARG USER_UID=1000
 ARG USER_GID=1000

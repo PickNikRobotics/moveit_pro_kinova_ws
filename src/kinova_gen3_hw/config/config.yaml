@@ -1,19 +1,27 @@
 ###############################################################
 #
 #  MoveIt Pro robot configuration: Kinova Gen3 7DoF on real hardware.
-#  Inherits from kinova_gen3_sim (which inherits from kinova_gen3_mock) and
-#  overrides only the fields that change for real hardware: drop the simulator
-#  and target the Kortex driver. Adjust robot_ip below for your robot.
+#
+#  Inherits from kinova_gen3_mock and overrides only the fields that change for
+#  real hardware: talk to the arm over the network instead of ros2_control mock
+#  hardware. Adjust robot_ip below for your robot.
+#
+#  additional_driver_launch_file is always included, so this config overrides the
+#  mock drivers kinova_gen3_mock ships with kinova_gen3_mock's real-hardware
+#  launch, which is what starts the Kortex protective-stop manager.
 #
 ###############################################################
 
-based_on_package: "kinova_gen3_sim"
+based_on_package: "kinova_gen3_mock"
+
+runtime_launch_file:
+  package: "kinova_gen3_hw"
+  path: "launch/runtime.launch.xml"
 
 hardware:
-  simulated: False
-
-  robot_driver_persist_launch_file:
-    package: "kinova_gen3_hw"
+  # Real-hardware drivers, replacing the mock drivers the base config ships.
+  additional_driver_launch_file:
+    package: "kinova_gen3_mock"
     path: "launch/robot_drivers_to_persist.launch.py"
 
   robot_description:
@@ -22,13 +30,25 @@ hardware:
       - use_fake_hardware: "false"
       - fake_sensor_commands: "false"
 
+ros2_control:
+  # Activate the Kortex fault controller. protective_stop_manager_node, started by
+  # the additional_driver_launch_file above,
+  # watchdogs /fault_controller/internal_fault on a 0.1 s timer and reports a
+  # NONRECOVERABLE_FAULT if nothing publishes it, so without this the arm comes up
+  # permanently faulted and protective-stop recovery can never succeed. In mock
+  # that topic comes from mock_kinova_client_node instead, which is why this is a
+  # hardware-only override.
+  #
+  # This list replaces the inherited one rather than extending it, so
+  # joint_state_broadcaster has to be repeated.
+  controllers_active_at_startup:
+    - "joint_state_broadcaster"
+    - "fault_controller"
+
 moveit_params:
+  # Real hardware runs slower than the datasheet maximum kinova_gen3_mock
+  # declares: every joint is capped at 1.0 rad/s here. The jog configurations are
+  # inherited unchanged.
   joint_limits:
     package: "kinova_gen3_hw"
     path: "config/moveit/joint_limits.yaml"
-  pose_jog:
-    package: "kinova_gen3_hw"
-    path: "config/moveit/pose_jog.yaml"
-  joint_jog:
-    package: "kinova_gen3_hw"
-    path: "config/moveit/joint_jog.yaml"

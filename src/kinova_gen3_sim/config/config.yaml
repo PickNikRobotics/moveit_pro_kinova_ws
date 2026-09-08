@@ -1,25 +1,39 @@
 ###############################################################
 #
 #  MoveIt Pro robot configuration: Kinova Gen3 7DoF in MuJoCo simulation.
-#  Inherits from kinova_gen3_mock and overrides only the simulation-specific
-#  fields (MuJoCo scene, simulated_robot_driver_persist_launch_file).
+#
+#  This configuration loads and runs, but it does NOT run MuJoCo: the mujoco_*
+#  urdf_params
+#  below are declared as xacro args in
+#  kinova_gen3_mock/description/picknik_kinova_gen3.xacro but never consumed, and
+#  nothing emits a <ros2_control> block with the picknik_mujoco_ros/MujocoSystem
+#  plugin. Wiring that up requires suppressing the <ros2_control> block that
+#  ros2_kortex's load_arm macro emits unconditionally (the pinned main-picknik SHA
+#  has no include_ros2_control arg) and emitting a MuJoCo one instead — see
+#  src/test_config_packages/core_integration_config in the moveit_pro repo for the
+#  reference pattern.
+#
+#  Until then, use kinova_gen3_mock for development and kinova_gen3_hw for the
+#  real arm.
+#
+#  This package is also still a partly-renamed copy of the old space-satellite
+#  demo config: description/mujoco/ carries landsat and rafti scenes and
+#  assets, and objectives/ carries AprilTag registration, compliant-grasp, and
+#  force-torque objectives that the bare-arm boilerplate does not use. That
+#  content belongs on a demo branch rather than on main.
 #
 ###############################################################
 
 based_on_package: "kinova_gen3_mock"
 
+runtime_launch_file:
+  package: "kinova_gen3_sim"
+  path: "launch/runtime.launch.xml"
+
 hardware:
-  # Use the MuJoCo simulator backend.
-  simulated: True
-
-  # Bring up MuJoCo as the "robot driver" while running in simulation mode.
-  simulated_robot_driver_persist_launch_file:
-    package: "kinova_gen3_sim"
-    path: "launch/sim/robot_drivers_to_persist_sim.launch.py"
-
   robot_description:
     urdf_params:
       - mujoco_keyframe: "default"
       - mujoco_model: "description/mujoco/scene.xml"
       - mujoco_viewer: false
-      - use_fake_hardware: "%>> hardware.simulated"
+      - use_fake_hardware: "true"
