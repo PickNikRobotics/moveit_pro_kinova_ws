@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- MuJoCo hardware for the Kinova Gen3. picknik_mujoco_ros/MujocoSystem takes
+       its joints and actuators from the MJCF model, so this block names no
+       joints. The model and its package come from the config that selects
+       hardware_interface:=mujoco (kinova_gen3_sim), so this package does not
+       depend on it. -->
+  <xacro:macro name="kinova_gen3_mujoco_ros2_control" params="
+    name
+    mujoco_model
+    mujoco_model_package
+    mujoco_keyframe:=''
+    mujoco_viewer:=false">
+    <ros2_control name="${name}" type="system">
+      <hardware>
+        <plugin>picknik_mujoco_ros/MujocoSystem</plugin>
+        <param name="mujoco_model">${mujoco_model}</param>
+        <param name="mujoco_model_package">${mujoco_model_package}</param>
+        <param name="mujoco_keyframe">${mujoco_keyframe}</param>
+        <param name="mujoco_viewer">${str(mujoco_viewer).lower()}</param>
+        <!-- Rate at which <camera> images are published -->
+        <param name="render_publish_rate">10</param>
+        <!-- Rate at which <site> transforms are published -->
+        <param name="tf_publish_rate">60</param>
+      </hardware>
+    </ros2_control>
+  </xacro:macro>
+</robot>

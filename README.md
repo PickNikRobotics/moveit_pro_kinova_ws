@@ -8,20 +8,22 @@ Refer to the [Kinova Gen3 Hardware Setup Guide](https://docs.picknik.ai/hardware
 ## Included configurations
 
 The `main` branch ships a boilerplate Kinova Gen3 7DoF arm with the arm-integrated Vision Module wrist camera and no gripper.
-The two supported configurations form an inheritance chain (per [robot_and_objective_inheritance](https://docs.picknik.ai/how_to/configuration_tutorials/robot_and_objective_inheritance/)):
+The three configurations form an inheritance chain (per [robot_and_objective_inheritance](https://docs.picknik.ai/how_to/configuration_tutorials/robot_and_objective_inheritance/)):
 
 ```
-kinova_gen3_mock  →  kinova_gen3_hw
+kinova_gen3_mock  →  kinova_gen3_sim  →  kinova_gen3_hw
 ```
 
-- `kinova_gen3_mock` — bare arm on `ros2_control` mock hardware.
+They share one URDF, `kinova_gen3_mock/description/picknik_kinova_gen3.xacro`, and differ in its `hardware_interface` urdf_param, which selects the arm's `<ros2_control>` hardware: `mock`, `mujoco`, or `physical`.
+
+- `kinova_gen3_mock` — bare arm on `ros2_control` mock hardware (`hardware_interface: "mock"`).
   Owns the shared URDF, SRDF, MoveIt configuration, `ros2_control` manifest, driver launch files, and Objectives.
-- `kinova_gen3_hw` — real Kinova Kortex hardware.
-  Inherits from `kinova_gen3_mock` and overrides only `additional_driver_launch_file`, `robot_ip`, `use_fake_hardware`, `fake_sensor_commands`, the startup controller list (to activate `fault_controller`), and `joint_limits` (which caps every joint at 1.0 rad/s rather than the datasheet maximum).
+- `kinova_gen3_sim` — the arm simulated in MuJoCo (`hardware_interface: "mujoco"`), mounted on the floor as in the URDF.
+  Inherits from `kinova_gen3_mock` and adds only the MuJoCo scene in `description/mujoco/`.
+- `kinova_gen3_hw` — real Kinova Kortex hardware (`hardware_interface: "physical"`).
+  Inherits from `kinova_gen3_sim` and overrides only `additional_driver_launch_file`, `robot_ip`, `hardware_interface`, `fake_sensor_commands`, the startup controller list (to activate `fault_controller`), and `joint_limits` (which caps every joint at 1.0 rad/s rather than the datasheet maximum).
   Set `robot_ip` for your robot before running.
 - `kinova_pstop_manager` — helper node for Kortex protective-stop events, started by `kinova_gen3_mock`'s `launch/robot_drivers_to_persist.launch.py`, which only `kinova_gen3_hw` selects as its `additional_driver_launch_file`.
-
-`kinova_gen3_sim` is present but **not functional** — see [Known gaps](#known-gaps).
 
 ## Adding a Robotiq gripper
 
@@ -87,12 +89,9 @@ They stay on the MoveIt Pro release they were built for and are not migrated whe
 
 ## Known gaps
 
-- **`kinova_gen3_sim` does not run MuJoCo.** It loads and runs as a second mock-hardware config. Its `mujoco_model` / `mujoco_keyframe` / `mujoco_viewer` params are declared as xacro args but never consumed, so nothing emits a `<ros2_control>` block with the `picknik_mujoco_ros/MujocoSystem` plugin.
-  Wiring it up means suppressing the `<ros2_control>` block that `ros2_kortex`'s `load_arm` macro emits unconditionally — the pinned `main-picknik` SHA has no `include_ros2_control` argument.
-- **`kinova_gen3_sim` still carries space-satellite demo content**: landsat and rafti MuJoCo scenes and assets in `description/mujoco/`, AprilTag registration / compliant-grasp / force-torque Objectives in `objectives/`, and an unused `config/moveit/` (its `config.yaml` declares no `moveit_params`).
-  None of it is loaded by the bare-arm boilerplate, and it belongs on a demo branch rather than on `main`.
-- **`fanuc` is checked out as its own submodule** under `src/external_dependencies/`, even though no Kinova config uses it.
-  It is a separate entry rather than only a nested one so `catkin_pkg.find_packages` can reach `fanuc_lrmate200id_support`, which `picknik_accessories` declares a rosdep on; see the comment in `.gitmodules`.
+- **MuJoCo collides against convex hulls of the arm links.** `kinova_gen3_sim` reuses the URDF's collision meshes from `kortex_description`, which are not convex: their volume is 28–47% of their convex hull's, except `base_link` at 89%.
+  MuJoCo replaces each with its convex hull, so contacts in the elbow and wrist bends happen early, and the simulation is coarser than MoveIt's collision checking.
+  A convex decomposition of each link, used only by the MJCF, would fix this.
 - **No force-torque sensor.** The pinned `ros2_kortex` declares no `<sensor>`, so JTAC and VFC run with `ft_sensor_names` unset.
   They degrade gracefully into a trajectory controller and a Cartesian jog controller, which is what PoseJog and JointJog need, but any Behavior port that depends on force sensing — `absolute_force_torque_threshold` stop-on-contact in particular — is a silent no-op.
   No Objective shipped here sets one; if you add one, it will not protect you.

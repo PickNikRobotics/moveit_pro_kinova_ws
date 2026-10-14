@@ -2,9 +2,9 @@
 #
 #  MoveIt Pro robot configuration: Kinova Gen3 7DoF on real hardware.
 #
-#  Inherits from kinova_gen3_mock and overrides only the fields that change for
-#  real hardware: talk to the arm over the network instead of ros2_control mock
-#  hardware. Adjust robot_ip below for your robot.
+#  Inherits from kinova_gen3_sim (and through it kinova_gen3_mock) and overrides
+#  only the fields that change for real hardware: talk to the arm over the
+#  network instead of simulating it. Adjust robot_ip below for your robot.
 #
 #  additional_driver_launch_file is always included, so this config overrides the
 #  mock drivers kinova_gen3_mock ships with kinova_gen3_mock's real-hardware
@@ -12,7 +12,7 @@
 #
 ###############################################################
 
-based_on_package: "kinova_gen3_mock"
+based_on_package: "kinova_gen3_sim"
 
 runtime_launch_file:
   package: "kinova_gen3_hw"
@@ -27,7 +27,7 @@ hardware:
   robot_description:
     urdf_params:
       - robot_ip: "192.168.1.10"
-      - use_fake_hardware: "false"
+      - hardware_interface: "physical"
       - fake_sensor_commands: "false"
 
 ros2_control:

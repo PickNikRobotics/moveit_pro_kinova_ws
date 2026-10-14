@@ -5,8 +5,8 @@
 
   <description>
     MuJoCo-simulation configuration for a Kinova Gen3 7DoF arm. Inherits the
-    URDF, SRDF, and MoveIt configuration from kinova_gen3_mock; only the MuJoCo
-    scene and simulator launch file are added here.
+    URDF, SRDF, and MoveIt configuration from kinova_gen3_mock and selects the
+    MuJoCo ros2_control hardware with its own scene.
   </description>
 
   <maintainer email="paul.gesel@picknik.ai">Paul Gesel</maintainer>
@@ -18,9 +18,8 @@
 
   <depend>kinova_gen3_mock</depend>
 
-  <exec_depend>joint_trajectory_admittance_controller</exec_depend>
+  <exec_depend>kortex_description</exec_depend>
   <exec_depend>picknik_mujoco_ros</exec_depend>
-  <exec_depend>velocity_force_controller</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
