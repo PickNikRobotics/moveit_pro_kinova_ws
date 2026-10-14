@@ -5,6 +5,12 @@ for the **picknik_006_gen3** asset: a Kinova Gen3 7DoF arm + Robotiq 2F-85
 (via the Kinova internal bus) + a wrist-mounted RealSense D415. The
 arm-integrated Vision Module is also enabled.
 
+This branch is a public example of a complete system built on the Kinova
+boilerplate, with the gripper, cameras, and Objectives the boilerplate does not
+carry. Check it out if you want to build that full system and are willing to
+fetch its extra dependencies. It targets MoveIt Pro 9.x and stays on that
+release; it is not migrated to newer MoveIt Pro releases.
+
 Refer to the [Kinova Gen3 Hardware Setup Guide](https://docs.picknik.ai/hardware_guides/robot_arms/kinova_hardware_setup_guide/)
 for installation.
 
