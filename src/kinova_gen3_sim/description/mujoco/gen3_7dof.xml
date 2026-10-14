@@ -7,6 +7,10 @@
     Modified by PickNik Robotics, 2026: converted to MJCF with MuJoCo position
     actuators, a wrist camera, and gravity compensation; removed the Robotiq
     2F-85 gripper; placed base_link at the world origin to match the URDF.
+
+    Collision meshes are the URDF's, loaded from kortex_description with
+    package:// URIs. They are not convex, and MuJoCo collides against each one's
+    convex hull, so contacts near the links are coarser than MoveIt's.
   -->
   <compiler angle="radian" meshdir="assets" />
   <option integrator="implicitfast" />
@@ -45,22 +49,37 @@
     <material name="black" rgba="0.149 0.149 0.149 1" />
 
     <!-- Kinova collision meshes -->
-    <mesh name="base_link_c" file="kinova/base_link.STL" />
-    <mesh name="shoulder_link_c" file="kinova/shoulder_link.STL" />
-    <mesh name="half_arm_1_link_c" file="kinova/half_arm_1_link.STL" />
-    <mesh name="half_arm_2_link_c" file="kinova/half_arm_2_link.STL" />
-    <mesh name="forearm_link_c" file="kinova/forearm_link.STL" />
+    <mesh
+      name="base_link_c"
+      file="package://kortex_description/arms/gen3/7dof/meshes/base_link.STL"
+    />
+    <mesh
+      name="shoulder_link_c"
+      file="package://kortex_description/arms/gen3/7dof/meshes/shoulder_link.STL"
+    />
+    <mesh
+      name="half_arm_1_link_c"
+      file="package://kortex_description/arms/gen3/7dof/meshes/half_arm_1_link.STL"
+    />
+    <mesh
+      name="half_arm_2_link_c"
+      file="package://kortex_description/arms/gen3/7dof/meshes/half_arm_2_link.STL"
+    />
+    <mesh
+      name="forearm_link_c"
+      file="package://kortex_description/arms/gen3/7dof/meshes/forearm_link.STL"
+    />
     <mesh
       name="spherical_wrist_1_link_c"
-      file="kinova/spherical_wrist_1_link.STL"
+      file="package://kortex_description/arms/gen3/7dof/meshes/spherical_wrist_1_link.STL"
     />
     <mesh
       name="spherical_wrist_2_link_c"
-      file="kinova/spherical_wrist_2_link.STL"
+      file="package://kortex_description/arms/gen3/7dof/meshes/spherical_wrist_2_link.STL"
     />
     <mesh
       name="bracelet_with_vision_link_c"
-      file="kinova/bracelet_with_vision_link.STL"
+      file="package://kortex_description/arms/gen3/7dof/meshes/bracelet_with_vision_link.STL"
     />
     <!-- Kinova visual meshes -->
     <mesh name="base_link" file="kinova/base_link.obj" />
