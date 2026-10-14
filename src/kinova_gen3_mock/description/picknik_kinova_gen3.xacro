@@ -12,11 +12,13 @@
     <xacro:arg name="session_inactivity_timeout_ms" default="60000" />
     <xacro:arg name="connection_inactivity_timeout_ms" default="2000" />
     <xacro:arg name="prefix" default="" />
-    <xacro:arg name="use_fake_hardware" default="true" />
+    <!-- Which <ros2_control> hardware the arm uses:
+           mock      ros2_control mock hardware (mock_components/GenericSystem)
+           mujoco    MuJoCo simulation (picknik_mujoco_ros/MujocoSystem)
+           physical  the real arm over the Kortex driver -->
+    <xacro:arg name="hardware_interface" default="mock" />
+    <xacro:property name="hardware_interface" value="$(arg hardware_interface)" />
     <xacro:arg name="fake_sensor_commands" default="false" />
-    <xacro:arg name="sim_gazebo" default="false" />
-    <xacro:arg name="sim_ignition" default="false" />
-    <xacro:arg name="sim_isaac" default="false" />
     <xacro:arg name="isaac_joint_commands" default="/isaac_joint_commands" />
     <xacro:arg name="isaac_joint_states" default="/isaac_joint_states" />
     <xacro:arg name="use_external_cable" default="false" />
@@ -36,9 +38,10 @@
     <xacro:arg name="gripper" default="" />
     <xacro:arg name="gripper_joint_name" default="" />
     <xacro:arg name="use_internal_bus_gripper_comm" default="false" />
-    <!-- Simulator-specific args (no-ops for mock and hw; consumed by inheriting
-         configs that select a MuJoCo or Isaac scene). -->
+    <!-- MuJoCo args, used only when hardware_interface is mujoco. The config that
+         selects MuJoCo (kinova_gen3_sim) names its own scene package and file. -->
     <xacro:arg name="mujoco_model" default="" />
+    <xacro:arg name="mujoco_model_package" default="" />
     <xacro:arg name="mujoco_keyframe" default="" />
     <xacro:arg name="mujoco_viewer" default="false" />
 
@@ -55,6 +58,47 @@
     <xacro:arg name="initial_positions_file" default="$(find kinova_gen3_mock)/config/initial_positions.yaml"/>
     <!-- convert to property to use substitution in function -->
     <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
+
+    <!-- ros2_control hardware for the selected hardware_interface. load_robot
+         below is called with include_ros2_control="false", so this is the only
+         <ros2_control> block for the arm. -->
+    <xacro:if value="${hardware_interface in ['mock', 'physical']}">
+      <xacro:include filename="$(find kortex_description)/arms/$(arg arm)/$(arg dof)dof/urdf/kortex.ros2_control.xacro" />
+      <xacro:kortex_ros2_control
+        name="$(arg prefix)KortexMultiInterfaceHardware" prefix="$(arg prefix)"
+        use_fake_hardware="${hardware_interface == 'mock'}"
+        fake_sensor_commands="$(arg fake_sensor_commands)"
+        sim_gazebo="false"
+        sim_isaac="false"
+        isaac_joint_commands="$(arg isaac_joint_commands)"
+        isaac_joint_states="$(arg isaac_joint_states)"
+        tf_prefix=""
+        initial_positions="${xacro.load_yaml(initial_positions_file)}"
+        robot_ip="$(arg robot_ip)"
+        username="$(arg username)"
+        password="$(arg password)"
+        port="$(arg port)"
+        port_realtime="$(arg port_realtime)"
+        session_inactivity_timeout_ms="$(arg session_inactivity_timeout_ms)"
+        connection_inactivity_timeout_ms="$(arg connection_inactivity_timeout_ms)"
+        use_internal_bus_gripper_comm="$(arg use_internal_bus_gripper_comm)"
+        gripper_max_velocity="100.0"
+        gripper_max_force="100.0"
+        gripper_joint_name="$(arg gripper_joint_name)"
+        gripper="$(arg gripper)"/>
+    </xacro:if>
+    <xacro:if value="${hardware_interface == 'mujoco'}">
+      <xacro:include filename="$(find kinova_gen3_mock)/description/kinova_gen3_mujoco.ros2_control.xacro" />
+      <xacro:kinova_gen3_mujoco_ros2_control
+        name="$(arg prefix)KinovaGen3MujocoSystem"
+        mujoco_model="$(arg mujoco_model)"
+        mujoco_model_package="$(arg mujoco_model_package)"
+        mujoco_keyframe="$(arg mujoco_keyframe)"
+        mujoco_viewer="$(arg mujoco_viewer)"/>
+    </xacro:if>
+    <xacro:unless value="${hardware_interface in ['mock', 'mujoco', 'physical']}">
+      <xacro:element xacro:name="${xacro.fatal('hardware_interface must be mock, mujoco, or physical, not ' + hardware_interface)}"/>
+    </xacro:unless>
 
     <!-- Load the robot. No gripper is mounted by default; the Kinova-integrated
          wrist Vision Module is enabled via vision="true". -->
@@ -74,13 +118,9 @@
       session_inactivity_timeout_ms="$(arg session_inactivity_timeout_ms)"
       connection_inactivity_timeout_ms="$(arg connection_inactivity_timeout_ms)"
       use_internal_bus_gripper_comm="$(arg use_internal_bus_gripper_comm)"
-      use_fake_hardware="$(arg use_fake_hardware)"
-      fake_sensor_commands="$(arg fake_sensor_commands)"
-      sim_gazebo="$(arg sim_gazebo)"
-      sim_ignition="$(arg sim_ignition)"
-      sim_isaac="$(arg sim_isaac)"
       use_external_cable="$(arg use_external_cable)"
-      initial_positions="${xacro.load_yaml(initial_positions_file)}" >
+      initial_positions="${xacro.load_yaml(initial_positions_file)}"
+      include_ros2_control="false" >
       <origin xyz="0 0 0.0" rpy="0 0 0" />
     </xacro:load_robot>
 

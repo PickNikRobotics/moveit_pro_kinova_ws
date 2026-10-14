@@ -1,0 +1,20 @@
+kinova_gen3_sim
+Copyright (c) 2026, PickNik Robotics. BSD-3-Clause.
+
+This package includes third-party material.
+
+description/mujoco/assets/kinova/*.STL
+  Source: Kinovarobotics/ros2_kortex, kortex_description/arms/gen3/7dof/meshes/,
+  as pinned in this workspace (PickNikRobotics/ros2_kortex fork). Unchanged
+  (byte-identical; the same files also ship in google-deepmind/mujoco_menagerie
+  kinova_gen3/assets/).
+  License: BSD-3-Clause, Copyright (c) 2018, Kinova inc.; see description/mujoco/LICENSE.
+
+description/mujoco/assets/kinova/*.obj, *.mtl
+  Converted with Blender 4.1.1 from the ros2_kortex meshes of the same names.
+  License: BSD-3-Clause, Copyright (c) 2018, Kinova inc.; see description/mujoco/LICENSE.
+
+description/mujoco/gen3_7dof.xml
+  Derived from the ros2_kortex Gen3 7DoF description (kinematics and inertials)
+  and modified by PickNik Robotics; see the notice at the top of the file.
+  License: BSD-3-Clause, Copyright (c) 2018, Kinova inc.; see description/mujoco/LICENSE.

@@ -62,7 +62,8 @@ hardware:
       - port_realtime: "10001"
       - session_inactivity_timeout_ms: "60000"
       - connection_inactivity_timeout_ms: "2000"
-      - use_fake_hardware: "true"
+      # mock, mujoco, or physical; see description/picknik_kinova_gen3.xacro.
+      - hardware_interface: "mock"
       - fake_sensor_commands: "false"
 
 # This Configures moveit params that are in moveit_config.py

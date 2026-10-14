@@ -51,12 +51,7 @@ HARDWARE_ONLY_CONTROLLERS = frozenset({"fault_controller"})
 # expected to be flagged. Compared for equality, not membership, so an entry that
 # stops being true fails the test instead of quietly masking a regression. See
 # the Known gaps section of the workspace README.
-KNOWN_UNREACHABLE_CONTENT = {
-    # kinova_gen3_sim is a partly-renamed copy of the old space-satellite demo
-    # config. Its Objectives and waypoints belong to that demo, not to the
-    # bare-arm boilerplate, and the config deliberately does not load them.
-    "kinova_gen3_sim": frozenset({"objectives", "waypoints"}),
-}
+KNOWN_UNREACHABLE_CONTENT: dict[str, frozenset[str]] = {}
 
 
 def _discover_packages(*, submodules: bool) -> dict[str, Path]:
