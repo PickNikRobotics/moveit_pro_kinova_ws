@@ -1,6 +1,7 @@
 # moveit_pro_kinova_ws
 
 This is a [MoveIt Pro](https://picknik.ai/pro) robot workspace for Kinova Gen3 7DoF arms.
+The `main` branch targets MoveIt Pro 10.x; for MoveIt Pro 9.4, use the [`v9.4`](#branches) branch.
 
 Refer to the [Kinova Gen3 Hardware Setup Guide](https://docs.picknik.ai/hardware_guides/robot_arms/kinova_hardware_setup_guide/) for installation.
 
@@ -14,11 +15,11 @@ kinova_gen3_mock  →  kinova_gen3_hw
 ```
 
 - `kinova_gen3_mock` — bare arm on `ros2_control` mock hardware.
-  Owns the shared URDF, SRDF, MoveIt configuration, `ros2_control` manifest, persist launch files, and Objectives.
+  Owns the shared URDF, SRDF, MoveIt configuration, `ros2_control` manifest, driver launch files, and Objectives.
 - `kinova_gen3_hw` — real Kinova Kortex hardware.
-  Inherits from `kinova_gen3_mock` and overrides only `simulated`, `robot_ip`, `use_fake_hardware`, `fake_sensor_commands`, the startup controller list (to activate `fault_controller`), and `joint_limits` (which caps every joint at 1.0 rad/s rather than the datasheet maximum).
+  Inherits from `kinova_gen3_mock` and overrides only `additional_driver_launch_file`, `robot_ip`, `use_fake_hardware`, `fake_sensor_commands`, the startup controller list (to activate `fault_controller`), and `joint_limits` (which caps every joint at 1.0 rad/s rather than the datasheet maximum).
   Set `robot_ip` for your robot before running.
-- `kinova_pstop_manager` — helper node for Kortex protective-stop events, started by the inherited `robot_drivers_to_persist.launch.py` whenever `simulated` is `False`.
+- `kinova_pstop_manager` — helper node for Kortex protective-stop events, started by `kinova_gen3_mock`'s `launch/robot_drivers_to_persist.launch.py`, which only `kinova_gen3_hw` selects as its `additional_driver_launch_file`.
 
 `kinova_gen3_sim` is present but **not functional** — see [Known gaps](#known-gaps).
 
@@ -64,16 +65,31 @@ Before putting an arm into service:
 
 ## Branches
 
-Add-ons such as a gripper, an external RealSense, or full demos belong on their own branches that diverge from this boilerplate:
+`main` targets MoveIt Pro 10.x. Earlier releases live on `v<major>.<minor>` branches:
 
-- `picknik_006_gen3` — the PickNik office arm: Gen3 7DoF + Robotiq 2F-85 on the internal bus + wrist-mounted RealSense D415.
-- `picknik_006_gen3-quest-teleop` — the above plus Meta Quest teleoperation over an ADB reverse tunnel and a Stereolabs ZED 2i scene camera.
+| Branch | MoveIt Pro | Base image |
+| --- | --- | --- |
+| `main` | 10.x | `picknikciuser/moveit-pro`, Jazzy |
+| `v9.4` | 9.4 | `picknikciuser/moveit-studio`, Humble |
+
+To check out an earlier release:
+
+```bash
+git clone -b v9.4 --recurse-submodules https://github.com/PickNikRobotics/moveit_pro_kinova_ws.git
+```
+
+The `picknik_*` branches are public examples of complete systems built on this boilerplate, with grippers, cameras, and Objectives that `main` does not carry.
+Check one out if you want to build that full system and are willing to fetch its extra dependencies.
+They stay on the MoveIt Pro release they were built for and are not migrated when `main` moves to a new major:
+
+- `picknik_006_gen3` (MoveIt Pro 9.x) — the PickNik office arm: Gen3 7DoF + Robotiq 2F-85 on the internal bus + wrist-mounted RealSense D415.
+- `picknik_006_gen3-quest-teleop` (MoveIt Pro 9.x) — the above plus Meta Quest teleoperation over an ADB reverse tunnel and a Stereolabs ZED 2i scene camera.
 
 ## Known gaps
 
 - **`kinova_gen3_sim` does not run MuJoCo.** It loads and runs as a second mock-hardware config. Its `mujoco_model` / `mujoco_keyframe` / `mujoco_viewer` params are declared as xacro args but never consumed, so nothing emits a `<ros2_control>` block with the `picknik_mujoco_ros/MujocoSystem` plugin.
   Wiring it up means suppressing the `<ros2_control>` block that `ros2_kortex`'s `load_arm` macro emits unconditionally — the pinned `main-picknik` SHA has no `include_ros2_control` argument.
-- **`kinova_gen3_sim` still carries space-satellite demo content**: landsat and rafti MuJoCo scenes and assets in `description/mujoco/`, AprilTag registration / compliant-grasp / force-torque Objectives in `objectives/`, an unused `config/moveit/` (its `config.yaml` declares no `moveit_params`), and 20 Franka Panda meshes in `meshes/`.
+- **`kinova_gen3_sim` still carries space-satellite demo content**: landsat and rafti MuJoCo scenes and assets in `description/mujoco/`, AprilTag registration / compliant-grasp / force-torque Objectives in `objectives/`, and an unused `config/moveit/` (its `config.yaml` declares no `moveit_params`).
   None of it is loaded by the bare-arm boilerplate, and it belongs on a demo branch rather than on `main`.
 - **`fanuc` is checked out as its own submodule** under `src/external_dependencies/`, even though no Kinova config uses it.
   It is a separate entry rather than only a nested one so `catkin_pkg.find_packages` can reach `fanuc_lrmate200id_support`, which `picknik_accessories` declares a rosdep on; see the comment in `.gitmodules`.
