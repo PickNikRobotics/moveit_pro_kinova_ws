@@ -1,13 +1,16 @@
 # moveit_pro_kinova_ws
 
-This is a [MoveIt Pro v9.4.1](https://picknik.ai/pro) robot workspace for Kinova Gen3 7DoF arms.
+This is a [MoveIt Pro](https://picknik.ai/pro) robot workspace for Kinova Gen3 7DoF arms.
+This `v9.4` branch targets MoveIt Pro 9.4.
 
 Refer to the [Kinova Gen3 Hardware Setup Guide](https://docs.picknik.ai/hardware_guides/robot_arms/kinova_hardware_setup_guide/) for installation.
 
 ## Included configurations
 
-The `main` branch ships a boilerplate Kinova Gen3 7DoF arm with the
-arm-integrated Vision Module wrist camera and the Robotiq 85 gripper. The three
+This branch ships a Kinova Gen3 7DoF arm with the arm-integrated Vision Module
+wrist camera and a Robotiq 2F-85 gripper. The gripper is part of the
+description in every configuration and cannot be switched off with a
+`urdf_params` value. The three
 configurations form an inheritance chain (per
 [robot_and_objective_inheritance](https://docs.picknik.ai/how_to/configuration_tutorials/robot_and_objective_inheritance/)):
 

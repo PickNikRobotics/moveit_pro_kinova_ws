@@ -1,4 +1,11 @@
 <?xml version="1.0"?>
+<!--
+  Copied from PickNikRobotics/ros2_kortex (branch main-picknik, commit 732b96f),
+  kortex_description/arms/gen3/7dof/urdf/gen3_macro.xacro.
+  Copyright (c) 2018, Kinova inc. BSD-3-Clause; see ../../../../LICENSE.
+
+  Modified by PickNik Robotics, 2026: Replaced the use_fake_hardware, sim_gazebo, and sim_isaac flags with a hardware_interface selector (mock, kortex, mujoco) and MuJoCo parameters; gave dof, vision, robot_ip, and the gripper arguments defaults; included this package's copy of kortex.ros2_control.xacro; changed the session_inactivity_timeout_ms default to 60000 and the use_internal_bus_gripper_comm default to false.
+-->
 
 <robot name="gen3_arm" xmlns:xacro="http://ros.org/wiki/xacro">
 

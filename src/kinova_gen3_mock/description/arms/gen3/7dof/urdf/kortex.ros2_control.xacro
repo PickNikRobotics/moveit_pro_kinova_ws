@@ -1,4 +1,11 @@
 <?xml version="1.0"?>
+<!--
+  Copied from PickNikRobotics/ros2_kortex (branch main-picknik, commit 732b96f),
+  kortex_description/arms/gen3/7dof/urdf/kortex.ros2_control.xacro.
+  Copyright (c) 2018, Kinova inc. BSD-3-Clause; see ../../../../LICENSE.
+
+  Modified by PickNik Robotics, 2026: Replaced the use_fake_hardware, sim_gazebo, and sim_isaac flags with a hardware_interface selector: mock uses mock_components/GenericSystem, kortex uses kortex_driver/KortexMultiInterfaceHardware, and mujoco uses picknik_mujoco_ros/MujocoSystem. Removed the Gazebo and Isaac backends and gave the connection and gripper parameters defaults.
+-->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <xacro:macro name="kortex_ros2_control" params="
