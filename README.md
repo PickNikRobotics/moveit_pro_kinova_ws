@@ -18,7 +18,7 @@ They share one URDF, `kinova_gen3_mock/description/picknik_kinova_gen3.xacro`, a
 
 - `kinova_gen3_mock` — bare arm on `ros2_control` mock hardware (`hardware_interface: "mock"`).
   Owns the shared URDF, SRDF, MoveIt configuration, `ros2_control` manifest, driver launch files, and Objectives.
-- `kinova_gen3_sim` — the arm simulated in MuJoCo (`hardware_interface: "mujoco"`), on a table matching the URDF's.
+- `kinova_gen3_sim` — the arm simulated in MuJoCo (`hardware_interface: "mujoco"`), mounted on the floor as in the URDF.
   Inherits from `kinova_gen3_mock` and adds only the MuJoCo scene in `description/mujoco/`.
 - `kinova_gen3_hw` — real Kinova Kortex hardware (`hardware_interface: "physical"`).
   Inherits from `kinova_gen3_sim` and overrides only `additional_driver_launch_file`, `robot_ip`, `hardware_interface`, `fake_sensor_commands`, the startup controller list (to activate `fault_controller`), and `joint_limits` (which caps every joint at 1.0 rad/s rather than the datasheet maximum).
@@ -92,8 +92,6 @@ They stay on the MoveIt Pro release they were built for and are not migrated whe
 - **MuJoCo collides against convex hulls of the arm links.** `kinova_gen3_sim` reuses the URDF's collision meshes from `kortex_description`, which are not convex: their volume is 28–47% of their convex hull's, except `base_link` at 89%.
   MuJoCo replaces each with its convex hull, so contacts in the elbow and wrist bends happen early, and the simulation is coarser than MoveIt's collision checking.
   A convex decomposition of each link, used only by the MJCF, would fix this.
-- **`fanuc` is checked out as its own submodule** under `src/external_dependencies/`, even though no Kinova config uses it.
-  It is a separate entry rather than only a nested one so `catkin_pkg.find_packages` can reach `fanuc_lrmate200id_support`, which `picknik_accessories` declares a rosdep on; see the comment in `.gitmodules`.
 - **No force-torque sensor.** The pinned `ros2_kortex` declares no `<sensor>`, so JTAC and VFC run with `ft_sensor_names` unset.
   They degrade gracefully into a trajectory controller and a Cartesian jog controller, which is what PoseJog and JointJog need, but any Behavior port that depends on force sensing — `absolute_force_torque_threshold` stop-on-contact in particular — is a silent no-op.
   No Objective shipped here sets one; if you add one, it will not protect you.
