@@ -17,7 +17,7 @@
           ID="CreatePoseStamped"
           reference_frame="base_link"
           position_xyz="0.3;0.1;0.5"
-          orientation_xyzw="0.707;0.707;0.0;.0.0"
+          orientation_xyzw="0.707;0.707;0.0;0.0"
           pose_stamped="{pose_stamped}"
         />
         <Action
@@ -29,7 +29,7 @@
           ID="CreatePoseStamped"
           reference_frame="base_link"
           position_xyz="0.5;0.1;0.5"
-          orientation_xyzw="0.707;0.707;0.0;.0.0"
+          orientation_xyzw="0.707;0.707;0.0;0.0"
           pose_stamped="{pose_stamped}"
         />
         <Action
@@ -41,7 +41,7 @@
           ID="CreatePoseStamped"
           reference_frame="base_link"
           position_xyz="0.5;-0.1;0.5"
-          orientation_xyzw="0.707;0.707;0.0;.0.0"
+          orientation_xyzw="0.707;0.707;0.0;0.0"
           pose_stamped="{pose_stamped}"
         />
         <Action
@@ -53,7 +53,7 @@
           ID="CreatePoseStamped"
           reference_frame="base_link"
           position_xyz="0.3;-0.1;0.5"
-          orientation_xyzw="0.707;0.707;0.0;.0.0"
+          orientation_xyzw="0.707;0.707;0.0;0.0"
           pose_stamped="{pose_stamped}"
         />
         <Action
@@ -70,7 +70,7 @@
             planning_group_name="manipulator"
             tip_links="end_effector_link"
             tip_offset="0.0;0.0;0.0;0.0;0.0;0.0"
-            position_only="false"
+            cartesian_constraint="[{constraint_type: position_and_orientation}]"
             blending_radius="0.02"
             velocity_scale_factor="0.5"
             acceleration_scale_factor="0.5"

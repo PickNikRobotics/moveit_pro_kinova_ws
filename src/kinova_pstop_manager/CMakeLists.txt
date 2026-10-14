@@ -8,20 +8,15 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
   add_compile_options(-Wpedantic)
 endif()
 
-# Detect ROS distro for API compatibility
-if(DEFINED ENV{ROS_DISTRO})
-  if("$ENV{ROS_DISTRO}" STREQUAL "jazzy")
-    add_compile_definitions(ROS_DISTRO_JAZZY)
-  elseif("$ENV{ROS_DISTRO}" STREQUAL "humble")
-    add_compile_definitions(ROS_DISTRO_HUMBLE)
-  endif()
-endif()
+# ROS_DISTRO_<NAME> is already defined generically by moveit_pro_package() above,
+# which is what the ROS_DISTRO_JAZZY conditionals in protective_stop_manager_node.cpp
+# consume. Do not reintroduce a hand-rolled per-distro block here.
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_ros REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
-find_package(moveit_studio_agent_msgs)
+find_package(moveit_studio_agent_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)

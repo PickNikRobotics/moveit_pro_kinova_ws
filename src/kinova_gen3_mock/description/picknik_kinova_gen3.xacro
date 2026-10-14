@@ -20,6 +20,22 @@
     <xacro:arg name="isaac_joint_commands" default="/isaac_joint_commands" />
     <xacro:arg name="isaac_joint_states" default="/isaac_joint_states" />
     <xacro:arg name="use_external_cable" default="false" />
+    <!-- Gripper selection, forwarded to ros2_kortex's load_arm. The boilerplate
+         mounts no gripper, so these default to empty and tool_frame stays at the
+         wrist flange.
+
+         WARNING: setting these alone does NOT mount a gripper. load_arm uses them
+         for the Kortex hardware block and to add the gripper joint to
+         <ros2_control>, but contributes no links and no kinematic joint, so a
+         config that sets only these produces a model whose <ros2_control> block
+         references a joint the kinematic model does not contain. A complete
+         gripper overlay also needs a gripper description include, a gripper
+         controller in the ros2_control manifest, and a gripper group in the SRDF.
+         See "Adding a Robotiq gripper" in the workspace README, and the
+         picknik_006_gen3 branch for a reference implementation. -->
+    <xacro:arg name="gripper" default="" />
+    <xacro:arg name="gripper_joint_name" default="" />
+    <xacro:arg name="use_internal_bus_gripper_comm" default="false" />
     <!-- Simulator-specific args (no-ops for mock and hw; consumed by inheriting
          configs that select a MuJoCo or Isaac scene). -->
     <xacro:arg name="mujoco_model" default="" />
@@ -40,14 +56,14 @@
     <!-- convert to property to use substitution in function -->
     <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
 
-    <!-- Load the robot. No gripper is mounted in this boilerplate config; the
-         Kinova-integrated wrist Vision Module is enabled via vision="true". -->
+    <!-- Load the robot. No gripper is mounted by default; the Kinova-integrated
+         wrist Vision Module is enabled via vision="true". -->
     <xacro:load_robot
       parent="world"
       prefix="$(arg prefix)"
       arm="$(arg arm)"
-      gripper=""
-      gripper_joint_name=""
+      gripper="$(arg gripper)"
+      gripper_joint_name="$(arg gripper_joint_name)"
       dof="$(arg dof)"
       vision="$(arg vision)"
       robot_ip="$(arg robot_ip)"
@@ -57,7 +73,7 @@
       port_realtime="$(arg port_realtime)"
       session_inactivity_timeout_ms="$(arg session_inactivity_timeout_ms)"
       connection_inactivity_timeout_ms="$(arg connection_inactivity_timeout_ms)"
-      use_internal_bus_gripper_comm="false"
+      use_internal_bus_gripper_comm="$(arg use_internal_bus_gripper_comm)"
       use_fake_hardware="$(arg use_fake_hardware)"
       fake_sensor_commands="$(arg fake_sensor_commands)"
       sim_gazebo="$(arg sim_gazebo)"
@@ -69,8 +85,12 @@
     </xacro:load_robot>
 
     <!-- Environment -->
+    <!-- The table top must stay clear of base_link by more than the collision
+         padding applied to both, or a fresh checkout reports "start state in
+         collision" with no obvious cause. At z = -0.17 the 0.25 m cube's top sits
+         at -0.045, leaving 4.5 cm against a default link_padding of 0.01. -->
     <xacro:cube link_name="table" connected_to="world" length="2.00" width="2.00" height="0.25" alpha="0.3">
-      <origin xyz="0 0 -0.145" rpy="0 0 0"/>
+      <origin xyz="0 0 -0.17" rpy="0 0 0"/>
     </xacro:cube>
 
     <!-- Convenience alias for motion-planning-relevant tool point. The

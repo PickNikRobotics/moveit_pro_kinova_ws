@@ -10,8 +10,17 @@
     _favorite="false"
   >
     <Control ID="Sequence" name="TopLevelSequence">
-      <Action ID="VisualizeMesh" marker_lifetime="0.0" />
-      <Action ID="AddPoseStampedToVector" input="{mesh_pose}" />
+      <Action
+        ID="VisualizeMesh"
+        marker_lifetime="0.0"
+        mesh_path="{mesh_path}"
+        mesh_pose="{mesh_pose}"
+      />
+      <Action
+        ID="AddPoseStampedToVector"
+        input="{mesh_pose}"
+        vector="{pose_stamped_vector}"
+      />
       <Action
         ID="AdjustPoseWithIMarker"
         initial_poses="{pose_stamped_vector}"
@@ -25,7 +34,6 @@
       <output_port name="adjusted_poses" default="{adjusted_poses}" />
       <input_port name="mesh_path" default="{mesh_path}" />
       <input_port name="mesh_pose" default="{mesh_pose}" />
-      <input_port name="_collapsed" default="false" />
       <MetadataFields>
         <Metadata subcategory="User Input" />
       </MetadataFields>

@@ -31,6 +31,12 @@ def generate_launch_description():
                 "controllers_default_not_active": controller_config.get(
                     "controllers_inactive_at_startup", empty_gen()
                 ),
+                # How long the fault controller may not have published yet before
+                # the node reports a non-recoverable fault. This launch file starts
+                # before the controller manager, so some grace is always needed.
+                # Raise it if your controller manager starts more slowly; do not set
+                # it to zero, which the node rejects.
+                "startup_grace_period_sec": 30.0,
             }
         ],
     )

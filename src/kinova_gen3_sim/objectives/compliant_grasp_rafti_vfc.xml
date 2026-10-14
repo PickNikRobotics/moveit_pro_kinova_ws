@@ -176,22 +176,13 @@
           </Control>
         </Control>
       </Control>
-      <Action
-        ID="InitializeMTCTask"
-        task_id=""
-        controller_names="joint_trajectory_admittance_controller;robotiq_gripper_controller"
-        task="{mtc_task}"
-        trajectory_monitoring="false"
-      />
+      <Action ID="InitializeMTCTask" task_id="" task="{mtc_task}" />
       <Action ID="SetupMTCCurrentState" task="{mtc_task}" />
       <Action
         ID="SetupMTCPlanToPose"
         target_pose="{hole_object}"
         acceleration_scale_factor="1.000000"
         ik_frame="grasp_link"
-        keep_orientation="false"
-        keep_orientation_link_names="grasp_link"
-        keep_orientation_tolerance="0.100000"
         link_padding="0.000000"
         max_iterations="5000"
         monitored_stage="current state"
@@ -213,21 +204,8 @@
         quaternion_xyzw="0.0;1.0;0.0;0.0"
         output_pose="{goal_pose}"
       />
-      <Action
-        ID="InitializeMTCTask"
-        task_id=""
-        controller_names="joint_trajectory_admittance_controller;robotiq_gripper_controller"
-        task="{mtc_task}"
-        trajectory_monitoring="false"
-      />
+      <Action ID="InitializeMTCTask" task_id="" task="{mtc_task}" />
       <Action ID="SetupMTCCurrentState" task="{mtc_task}" />
-      <Action
-        ID="SetupMTCUpdateGroupCollisionRule"
-        group_name="gripper"
-        object_name="&lt;octomap&gt;"
-        allow_collision="true"
-        task="{mtc_task}"
-      />
       <Action
         ID="SetupMTCMoveAlongFrameAxis"
         task="{mtc_task}"

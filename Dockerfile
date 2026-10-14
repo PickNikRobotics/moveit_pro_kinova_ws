@@ -4,9 +4,24 @@
 #
 # docker build -f ./Dockerfile .
 #
+# Pin to a specific MoveIt Pro release rather than taking the default:
+#
+# docker build --build-arg MOVEIT_DOCKER_TAG=10.0.0 -f ./Dockerfile .
+#
 
 # Specify the MoveIt Pro release to build on top of.
-ARG MOVEIT_PRO_BASE_IMAGE=picknikciuser/moveit-studio:${MOVEIT_DOCKER_TAG:-main}-${MOVEIT_ROS_DISTRO:-humble}
+#
+# MOVEIT_DOCKER_TAG and MOVEIT_ROS_DISTRO must be declared here, before the ARG
+# that references them. An undeclared variable inside a pre-FROM ARG default
+# expands to empty, so `--build-arg MOVEIT_DOCKER_TAG=...` would be silently
+# ignored and the `:-` fallback would always win.
+#
+# The default tag is the floating `main`, which moves. Pin it to the release you
+# validated your robot against before deploying. The `moveit_pro` CLI passes
+# MOVEIT_PRO_BASE_IMAGE explicitly and overrides all of this.
+ARG MOVEIT_DOCKER_TAG=main
+ARG MOVEIT_ROS_DISTRO=jazzy
+ARG MOVEIT_PRO_BASE_IMAGE=picknikciuser/moveit-pro:${MOVEIT_DOCKER_TAG}-${MOVEIT_ROS_DISTRO}
 ARG USERNAME=moveit-pro-user
 ARG USER_UID=1000
 ARG USER_GID=1000
@@ -67,6 +82,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     rosdep install -q -y \
       --from-paths src \
       --ignore-src
+
+# H.264 decoder (avdec_h264) for the Kinova wrist camera's color stream, which
+# kinova_vision decodes; the base image ships the other GStreamer elements it
+# uses. The camera is opt-in: see kinova_gen3_hw/launch/runtime.launch.xml.
+# Unpinned because Ubuntu's updates pocket keeps only the newest patch.
+# hadolint ignore=DL3008
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
+    apt-get install -q -y --no-install-recommends gstreamer1.0-libav
 
 # Set up colcon defaults for the new user
 USER ${USERNAME}

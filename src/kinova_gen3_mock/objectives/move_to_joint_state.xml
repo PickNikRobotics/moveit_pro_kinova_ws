@@ -9,9 +9,8 @@
       <Action
         ID="PlanToJointGoal"
         joint_goal="{target_joint_state}"
-        keep_orientation_tolerance="{keep_orientation_tolerance}"
         link_padding="{link_padding}"
-        keep_orientation="{keep_orientation}"
+        orientation_constraint="{orientation_constraint}"
         acceleration_scale_factor="{acceleration_scale_factor}"
         velocity_scale_factor="{velocity_scale_factor}"
         planning_group_name="{joint_group_name}"
@@ -27,8 +26,7 @@
       <input_port name="target_joint_state" default="{target_joint_state}" />
       <input_port name="joint_group_name" default="manipulator" />
       <input_port name="link_padding" default="0.01" />
-      <input_port name="keep_orientation_tolerance" default="0.05" />
-      <input_port name="keep_orientation" default="false" />
+      <input_port name="orientation_constraint" default="[]" />
       <input_port name="velocity_scale_factor" default="1.0" />
       <input_port name="acceleration_scale_factor" default="1.0" />
       <input_port

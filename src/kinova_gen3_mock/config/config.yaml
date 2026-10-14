@@ -4,12 +4,13 @@
 #
 ###############################################################
 
-hardware:
-  # Set simulated to false if you are using this as a configuration for real hardware.
-  # This allows users to switch between mock and real hardware using the same configuration.
-  # [Required]
-  simulated: True
+# Launch file started by the MoveIt Pro Runtime service.
+# [Required]
+runtime_launch_file:
+  package: "kinova_gen3_mock"
+  path: "launch/runtime.launch.xml"
 
+hardware:
   # If the MoveIt Pro Agent should launch the ros2 controller node.
   # [Optional, default=True]
   launch_control_node: True
@@ -19,21 +20,13 @@ hardware:
   # [Optional, default=True]
   launch_robot_state_publisher: True
 
-  # Specify additional launch files for running the robot with real hardware.
+  # Additional launch file included with the persistent robot driver process.
+  # It is always included, so this base configuration ships the mock drivers;
+  # kinova_gen3_hw overrides this key with the real Kortex drivers.
   # [Optional, defaults to a blank launch file if not specified]
-  robot_driver_persist_launch_file:
-    package: "kinova_gen3_mock"
-    path: "launch/robot_drivers_to_persist.launch.py"
-
-  # Specify any additional launch files for running the robot in simulation mode.
-  # Used when hardware.simulated is True.
-  # [Optional, defaults to a blank launch file if not specified]
-  simulated_robot_driver_persist_launch_file:
+  additional_driver_launch_file:
     package: "kinova_gen3_mock"
     path: "launch/sim/robot_drivers_to_persist_sim.launch.py"
-  simulated_hardware_launch_file:
-    package: "moveit_studio_agent"
-    path: "launch/blank.launch.py"
 
   # These Params are pasted to the XACRO to create the URDF
   robot_description:
@@ -48,7 +41,21 @@ hardware:
       - dof: "7"
       # Enable the Kinova-integrated wrist Vision Module.
       - vision: "true"
-      - robot_ip: ""
+      # Never give a urdf_param an empty-string value here. SystemConfigParser's
+      # merge() matches an inherited list entry with `if item.get(key)`, a
+      # truthiness test rather than a key-presence test, so a falsy value never
+      # matches and a child's override is appended alongside this entry instead of
+      # replacing it. The duplicate then resolves by list order alone. Mock
+      # hardware ignores robot_ip, so use an unroutable placeholder;
+      # kinova_gen3_hw overrides it with the real address.
+      - robot_ip: "0.0.0.0"
+      # Kinova factory-default credentials. On the hardware path these are
+      # rendered into the <hardware> block of the generated URDF and published on
+      # /robot_description, which is readable by every node on the DDS domain and
+      # by any web UI session. Change the credentials in the arm's Kortex web
+      # interface and override these in your own config package, and keep the arm
+      # on an isolated robot subnet. See "Robot credentials and network" in the
+      # workspace README.
       - username: "admin"
       - password: "admin"
       - port: "10000"
@@ -84,11 +91,13 @@ moveit_params:
     state_updates: True
     transforms_updates: True
 
-  trajectory_execution:
-    manage_controllers: True
-    allowed_execution_duration_scaling: 2.0
-    allowed_goal_duration_margin: 5.0
-    allowed_start_tolerance: 0.01
+
+# Sets ROS global params for launch.
+ros_global_params:
+  # Mock hardware runs on the system clock. A configuration that drives a
+  # simulator publishing /clock overrides this.
+  # [Optional, default=False]
+  use_sim_time: False
 
 # This configures what controllers gets run at startup
 ros2_control:

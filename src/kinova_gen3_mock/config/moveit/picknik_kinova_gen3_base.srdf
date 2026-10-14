@@ -12,6 +12,21 @@
         <chain base_link="base_link" tip_link="grasp_link"/>
     </group>
 
+    <!-- The Teleoperation IMarker mode binds its 6-DoF gizmo to an end effector
+         declared here; with none declared the mode's panel and its "Reset
+         Interactive Marker" button still render, but no marker is drawn in the
+         3D Visualization and nothing is ever dragged, so no Objective runs and
+         nothing reaches the logs.
+
+         This arm mounts no gripper, so end_effector_group is a minimal stand-in
+         holding only grasp_link — enough for the <end_effector> tag to name a
+         real group. Replace both with a real gripper group and end effector when
+         a gripper is added; see "Adding a Robotiq gripper" in the README. -->
+    <group name="end_effector_group">
+        <link name="grasp_link"/>
+    </group>
+    <end_effector name="moveit_ee" parent_link="end_effector_link" group="end_effector_group"/>
+
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="base_link" link2="shoulder_link" reason="Adjacent"/>
     <disable_collisions link1="base_link" link2="half_arm_1_link" reason="Never"/>

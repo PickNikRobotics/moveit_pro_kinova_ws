@@ -18,6 +18,7 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   find_package(ament_cmake_pytest REQUIRED)
   set(_pytest_tests
+    test/test_config_references.py
     test/test_waypoint_yaml_validation.py)
 
   foreach(_test_path ${_pytest_tests})
