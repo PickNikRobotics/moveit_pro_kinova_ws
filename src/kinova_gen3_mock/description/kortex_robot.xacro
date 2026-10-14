@@ -64,9 +64,8 @@
       <xacro:insert_block name="origin" />
     </xacro:load_arm>
 
-    <!-- Boilerplate has no gripper; expose tool_frame at the wrist. Branches
-         that add a gripper override gripper / gripper_joint_name and bring in
-         their own gripper xacro to override this section. -->
+    <!-- tool_frame marks the wrist flange. The optional gripper is mounted by
+         picknik_kinova_gen3.xacro, which also places grasp_link. -->
     <link name="${prefix}tool_frame"/>
     <joint name="${prefix}tool_frame_joint" type="fixed">
       <origin xyz="0 0 0" rpy="0 0 0" />

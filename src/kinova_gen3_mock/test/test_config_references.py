@@ -47,6 +47,11 @@ CONTROLLERS_WITHOUT_PARAMETER_BLOCK = frozenset(
 # test_hardware_config_activates_the_fault_controller pins the other side of this.
 HARDWARE_ONLY_CONTROLLERS = frozenset({"fault_controller"})
 
+# Controllers declared in the shared manifest for an opt-in urdf_param, which the
+# user adds to the startup lists when switching the option on. See "Robotiq 2F-85
+# gripper" in the workspace README.
+OPT_IN_CONTROLLERS = frozenset({"robotiq_gripper_controller"})
+
 # Content directories that are knowingly unreachable, mapped to the directories
 # expected to be flagged. Compared for equality, not membership, so an entry that
 # stops being true fails the test instead of quietly masking a regression. See
@@ -200,7 +205,7 @@ def test_declared_controllers_are_used(config_package: str) -> None:
         for name, entry in declared.items()
         if isinstance(entry, dict) and "type" in entry
     }
-    unused = controller_names - named - HARDWARE_ONLY_CONTROLLERS
+    unused = controller_names - named - HARDWARE_ONLY_CONTROLLERS - OPT_IN_CONTROLLERS
     assert not unused, (
         f"{config_package} declares controllers that no startup list names, so they "
         f"never load and their parameters are never validated: {sorted(unused)}"

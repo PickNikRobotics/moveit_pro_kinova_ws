@@ -18,3 +18,17 @@ description/mujoco/gen3_7dof.xml
   Derived from the ros2_kortex Gen3 7DoF description (kinematics and inertials)
   and modified by PickNik Robotics; see the notice at the top of the file.
   License: BSD-3-Clause, Copyright (c) 2018, Kinova inc.; see description/mujoco/LICENSE.
+
+description/mujoco/assets/robotiq_2f85/*.stl
+  Source: google-deepmind/mujoco_menagerie, robotiq_2f85/assets/, as of commit
+  d7b481bac63d3d600ab404ee74f7474c5efe8a67. Unchanged (byte-identical).
+  License: BSD-2-Clause, Copyright (c) 2013, ROS-Industrial; see
+  description/mujoco/assets/robotiq_2f85/LICENSE.
+
+description/mujoco/gen3_7dof_robotiq_2f_85.xml
+  gen3_7dof.xml (above) with a Robotiq 2F-85 derived from mujoco_menagerie
+  robotiq_2f85/2f85.xml and modified by PickNik Robotics; see the notice at the
+  top of the file.
+  License: BSD-3-Clause, Copyright (c) 2018, Kinova inc. (arm), see
+  description/mujoco/LICENSE; and BSD-2-Clause, Copyright (c) 2013,
+  ROS-Industrial (gripper), see description/mujoco/assets/robotiq_2f85/LICENSE.

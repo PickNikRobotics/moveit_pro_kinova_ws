@@ -7,7 +7,8 @@ Refer to the [Kinova Gen3 Hardware Setup Guide](https://docs.picknik.ai/hardware
 
 ## Included configurations
 
-The `main` branch ships a boilerplate Kinova Gen3 7DoF arm with the arm-integrated Vision Module wrist camera and no gripper.
+The `main` branch ships a boilerplate Kinova Gen3 7DoF arm with the arm-integrated Vision Module wrist camera.
+It mounts no gripper by default; the Robotiq 2F-85, which Kinova sells as a Gen3 option, can be [switched on](#robotiq-2f-85-gripper).
 The three configurations form an inheritance chain (per [robot_and_objective_inheritance](https://docs.picknik.ai/how_to/configuration_tutorials/robot_and_objective_inheritance/)):
 
 ```
@@ -25,34 +26,33 @@ They share one URDF, `kinova_gen3_mock/description/picknik_kinova_gen3.xacro`, a
   Set `robot_ip` for your robot before running.
 - `kinova_pstop_manager` — helper node for Kortex protective-stop events, started by `kinova_gen3_mock`'s `launch/robot_drivers_to_persist.launch.py`, which only `kinova_gen3_hw` selects as its `additional_driver_launch_file`.
 
-## Adding a Robotiq gripper
+## Robotiq 2F-85 gripper
 
-The boilerplate deliberately mounts no gripper, so `grasp_link` sits at the wrist flange and the `open_gripper` / `close_gripper` / `reactivate_gripper` Objectives have no controller to command.
+The configurations can mount a Robotiq 2F-85 on the wrist, wired through the Kinova internal bus as Kinova sells it.
+It is off by default, so `grasp_link` sits at the wrist flange and the `open_gripper` / `close_gripper` Objectives have no controller to command.
 
-**Setting the `gripper` urdf_params is not sufficient on its own.**
-`gripper`, `gripper_joint_name`, and `use_internal_bus_gripper_comm` are forwarded to `ros2_kortex`'s `load_arm`, which uses them for the Kortex hardware block and adds the gripper joint to `<ros2_control>` — but they add no links and no kinematic joint.
-Setting only these yields a model whose `ros2_control` block references a joint the kinematic model does not contain, and a gripper absent from collision checking.
+To switch it on, edit `kinova_gen3_mock/config/config.yaml`, or your own copy of it:
 
-A complete gripper overlay needs four pieces:
-
-1. The urdf_params, so the driver drives the gripper and `ros2_control` exposes its joint:
+1. Set the `gripper` urdf_param to `robotiq_2f_85`:
 
    ```yaml
    hardware:
      robot_description:
        urdf_params:
          - gripper: "robotiq_2f_85"
-         - gripper_joint_name: "robotiq_85_left_knuckle_joint"
-         - use_internal_bus_gripper_comm: "true"
    ```
 
-2. A gripper description included from your own URDF xacro, adding the gripper's links and kinematic joint and moving `grasp_link` from the wrist flange to the gripper's tool center point.
-   Because `sensor_frames` / `ee_frames` and the SRDF `tip_link` all name `grasp_link`, moving the alias is enough — none of them need editing.
-3. A `robotiq_gripper_controller` of type `position_controllers/GripperActionController`, `joint` set to the same `gripper_joint_name`, in your own `ros2_control` manifest and listed under `controllers_active_at_startup`.
-4. A gripper group and end-effector in your SRDF — `config/moveit/picknik_kinova_gen3_base.srdf` declares only `manipulator` — plus `disable_collisions` entries for the gripper's links.
-   Scope those to genuinely adjacent pairs; do not blanket-disable the gripper against the wrist and bracelet.
+2. Add `robotiq_gripper_controller` to `controllers_active_at_startup`.
+   `kinova_gen3_hw` replaces that list with its own, so add it in `kinova_gen3_hw/config/config.yaml` too.
 
-The `picknik_006_gen3` branch implements all four; use it as the reference rather than assembling this from scratch.
+The `gripper` urdf_param does the rest, in every configuration:
+
+- The URDF adds `robotiq_description`'s 2F-85 links and moves `grasp_link` between the fingertips, 0.15 m out from the gripper base.
+  Every config file that names the tool point uses `grasp_link`, so none of them change.
+- The SRDF (`config/moveit/picknik_kinova_gen3.srdf.xacro`, which MoveIt Pro processes with the same urdf_params) adds the `gripper` group, `open` and `close` states, the end effector, the mimic joints as passive joints, and collision exclusions for the gripper against itself and the bracelet it is bolted to.
+- The gripper joint's hardware follows `hardware_interface`: mock hardware for `mock`, the MuJoCo model `kinova_gen3_sim` names in `mujoco_model_robotiq_2f_85` for `mujoco`, and the Kortex driver over the internal bus for `physical`.
+
+`robotiq_description` comes from the `ros2_robotiq_gripper` submodule, along with the Robotiq serial driver and `serial`, which this boilerplate does not use.
 
 ## Robot credentials and network
 
@@ -95,5 +95,6 @@ They stay on the MoveIt Pro release they were built for and are not migrated whe
   They degrade gracefully into a trajectory controller and a Cartesian jog controller, which is what PoseJog and JointJog need, but any Behavior port that depends on force sensing — `absolute_force_torque_threshold` stop-on-contact in particular — is a silent no-op.
   No Objective shipped here sets one; if you add one, it will not protect you.
 - **`grasp_link` sits on the wrist flange face** while no gripper is mounted, so a Cartesian goal placed flat on a surface puts `bracelet_link` geometry in contact with it and reports the goal state in collision.
-  Mount a gripper (above) rather than inventing a fake offset.
+  Switch on the [Robotiq 2F-85](#robotiq-2f-85-gripper) rather than inventing a fake offset.
+- **The `reactivate_gripper` Objective calls `/robotiq_activation_controller/reactivate_gripper`**, a controller for the Robotiq serial driver that no configuration starts, so it fails even with the 2F-85 switched on.
 - **Nothing in CI builds or tests this workspace.** `.github/workflows/format.yaml` runs `pre-commit` only, so `colcon build` and `colcon test` — including `test_config_references.py`, which guards exactly the class of bug that reached this boilerplate — run only when someone runs them locally.

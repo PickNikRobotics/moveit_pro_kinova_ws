@@ -10,7 +10,8 @@
     mujoco_model
     mujoco_model_package
     mujoco_keyframe:=''
-    mujoco_viewer:=false">
+    mujoco_viewer:=false
+    ignore_joint_validation:=''">
     <ros2_control name="${name}" type="system">
       <hardware>
         <plugin>picknik_mujoco_ros/MujocoSystem</plugin>
@@ -22,6 +23,9 @@
         <param name="render_publish_rate">10</param>
         <!-- Rate at which <site> transforms are published -->
         <param name="tf_publish_rate">60</param>
+        <xacro:if value="${ignore_joint_validation != ''}">
+          <param name="ignore_joint_validation">${ignore_joint_validation}</param>
+        </xacro:if>
       </hardware>
     </ros2_control>
   </xacro:macro>

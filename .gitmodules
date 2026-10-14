@@ -14,3 +14,13 @@
 [submodule "src/external_dependencies/fanuc"]
 	path = src/external_dependencies/fanuc
 	url = https://github.com/PickNikRobotics/fanuc.git
+# ros2_robotiq_gripper provides robotiq_description for the opt-in Robotiq 2F-85
+# (gripper urdf_param). Its robotiq_driver needs serial, which has no rosdep rule on
+# Jazzy, so serial is checked out too (tylerjw/serial ros2 branch, the same pin
+# moveit_pro_ur_ws uses).
+[submodule "src/external_dependencies/ros2_robotiq_gripper"]
+	path = src/external_dependencies/ros2_robotiq_gripper
+	url = https://github.com/PickNikRobotics/ros2_robotiq_gripper.git
+[submodule "src/external_dependencies/serial"]
+	path = src/external_dependencies/serial
+	url = https://github.com/tylerjw/serial.git
