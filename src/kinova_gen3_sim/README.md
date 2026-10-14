@@ -8,6 +8,7 @@ It inherits everything from `kinova_gen3_mock` and changes only the arm's `ros2_
 `gen3_7dof_robotiq_2f_85.xml` repeats `gen3_7dof.xml` with the gripper added, because MJCF cannot include the gripper conditionally.
 Make any change to the arm in both files; `test/test_mujoco_models.py` fails when they differ outside the gripper.
 Both scenes include the table and floor from `environment.xml`.
+The arm's collision meshes are loaded from `kortex_description` with `package://` URIs, which MoveIt Pro's MuJoCo resolves through ament; MuJoCo uses their convex hulls (see Known gaps in the workspace README).
 
 Third-party material in `description/mujoco/` is listed in [NOTICE](NOTICE).
 

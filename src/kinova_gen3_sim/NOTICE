@@ -3,15 +3,11 @@ Copyright (c) 2026, PickNik Robotics. BSD-3-Clause.
 
 This package includes third-party material.
 
-description/mujoco/assets/kinova/*.STL
-  Source: Kinovarobotics/ros2_kortex, kortex_description/arms/gen3/7dof/meshes/,
-  as pinned in this workspace (PickNikRobotics/ros2_kortex fork). Unchanged
-  (byte-identical; the same files also ship in google-deepmind/mujoco_menagerie
-  kinova_gen3/assets/).
-  License: BSD-3-Clause, Copyright (c) 2018, Kinova inc.; see description/mujoco/LICENSE.
-
 description/mujoco/assets/kinova/*.obj, *.mtl
-  Converted with Blender 4.1.1 from the ros2_kortex meshes of the same names.
+  Converted with Blender 4.1.1 from the ros2_kortex meshes of the same names
+  (Kinovarobotics/ros2_kortex, kortex_description/arms/gen3/7dof/meshes/). The
+  collision meshes are not copied: gen3_7dof.xml and gen3_7dof_robotiq_2f_85.xml
+  load them from the kortex_description package with package:// URIs.
   License: BSD-3-Clause, Copyright (c) 2018, Kinova inc.; see description/mujoco/LICENSE.
 
 description/mujoco/gen3_7dof.xml

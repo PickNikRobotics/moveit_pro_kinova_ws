@@ -89,6 +89,10 @@ They stay on the MoveIt Pro release they were built for and are not migrated whe
 
 ## Known gaps
 
+- **MuJoCo collides against convex hulls of the arm links.** `kinova_gen3_sim` reuses the URDF's collision meshes from `kortex_description`, which are not convex: their volume is 28–47% of their convex hull's, except `base_link` at 89%.
+  MuJoCo replaces each with its convex hull, so contacts in the elbow and wrist bends happen early, and the simulation is coarser than MoveIt's collision checking.
+  The Robotiq 2F-85's linkage meshes, from MuJoCo Menagerie, are likewise 41–57% of their hulls.
+  A convex decomposition of each link, used only by the MJCF, would fix this.
 - **`fanuc` is checked out as its own submodule** under `src/external_dependencies/`, even though no Kinova config uses it.
   It is a separate entry rather than only a nested one so `catkin_pkg.find_packages` can reach `fanuc_lrmate200id_support`, which `picknik_accessories` declares a rosdep on; see the comment in `.gitmodules`.
 - **No force-torque sensor.** The pinned `ros2_kortex` declares no `<sensor>`, so JTAC and VFC run with `ft_sensor_names` unset.

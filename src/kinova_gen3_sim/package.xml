@@ -18,11 +18,13 @@
 
   <depend>kinova_gen3_mock</depend>
 
+  <exec_depend>kortex_description</exec_depend>
   <exec_depend>picknik_mujoco_ros</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_cmake_pytest</test_depend>
   <test_depend>ament_index_python</test_depend>
+  <test_depend>mujoco_package_uri</test_depend>
   <test_depend>python3-numpy</test_depend>
   <test_depend>xacro</test_depend>
 

@@ -23,9 +23,15 @@ import mujoco
 import numpy as np
 import pytest
 import xacro
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_prefix, get_package_share_directory
 
 MUJOCO_DIR = Path(__file__).resolve().parents[1] / "description" / "mujoco"
+
+# The arm's collision meshes are package:// URIs into kortex_description, which
+# MuJoCo resolves only with MoveIt Pro's resource provider plugin loaded.
+mujoco.mj_loadAllPluginLibraries(
+    str(Path(get_package_prefix("mujoco_package_uri")) / "bin" / "mujoco_plugin")
+)
 GRIPPER_CLASS = "2f85"
 GRIPPER_NAME_PREFIX = "robotiq_85_"
 
