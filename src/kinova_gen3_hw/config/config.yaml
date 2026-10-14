@@ -44,6 +44,8 @@ ros2_control:
   controllers_active_at_startup:
     - "joint_state_broadcaster"
     - "fault_controller"
+    # Add when the gripper urdf_param selects robotiq_2f_85:
+    # - "robotiq_gripper_controller"
 
 moveit_params:
   # Real hardware runs slower than the datasheet maximum kinova_gen3_mock

@@ -35,7 +35,7 @@ hardware:
       path: "description/picknik_kinova_gen3.xacro"
     srdf:
       package: "kinova_gen3_mock"
-      path: "config/moveit/picknik_kinova_gen3_base.srdf"
+      path: "config/moveit/picknik_kinova_gen3.srdf.xacro"
     urdf_params:
       - arm: "gen3"
       - dof: "7"
@@ -64,6 +64,10 @@ hardware:
       - connection_inactivity_timeout_ms: "2000"
       # mock, mujoco, or physical; see description/picknik_kinova_gen3.xacro.
       - hardware_interface: "mock"
+      # none, or robotiq_2f_85 for the Robotiq 2F-85 on the Kinova internal bus.
+      # Selecting the gripper also needs robotiq_gripper_controller activated
+      # below; see "Robotiq 2F-85 gripper" in the workspace README.
+      - gripper: "none"
       - fake_sensor_commands: "false"
 
 # This Configures moveit params that are in moveit_config.py
@@ -108,6 +112,8 @@ ros2_control:
   # Load and start these controllers so they can be used immediately.
   controllers_active_at_startup:
     - "joint_state_broadcaster"
+    # Add when the gripper urdf_param selects robotiq_2f_85:
+    # - "robotiq_gripper_controller"
   controllers_inactive_at_startup:
     - "joint_trajectory_controller"
     - "joint_trajectory_admittance_controller"

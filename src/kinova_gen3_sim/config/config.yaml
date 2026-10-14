@@ -18,6 +18,8 @@ hardware:
     urdf_params:
       - hardware_interface: "mujoco"
       - mujoco_model: "description/mujoco/scene.xml"
+      # Simulated instead when the gripper urdf_param selects robotiq_2f_85.
+      - mujoco_model_robotiq_2f_85: "description/mujoco/scene_robotiq_2f_85.xml"
       - mujoco_model_package: "kinova_gen3_sim"
       - mujoco_keyframe: "default"
       - mujoco_viewer: "false"

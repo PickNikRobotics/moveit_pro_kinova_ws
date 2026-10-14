@@ -1,0 +1,18 @@
+<mujoco model="kinova_gen3_robotiq_2f_85 scene">
+  <!--
+    Kinova Gen3 7DoF with the Robotiq 2F-85, on the floor. Selected by
+    kinova_gen3_sim when the gripper urdf_param is robotiq_2f_85.
+  -->
+  <include file="gen3_7dof_robotiq_2f_85.xml" />
+  <include file="environment.xml" />
+
+  <!-- Arm joints match kinova_gen3_mock/config/initial_positions.yaml; the
+       gripper starts open. -->
+  <keyframe>
+    <key
+      name="default"
+      qpos="0 0 -3.14 -2.51 0 0.96 1.57 0 0 0 0 0 0 0 0"
+      ctrl="0 0 -3.14 -2.51 0 0.96 1.57 0"
+    />
+  </keyframe>
+</mujoco>

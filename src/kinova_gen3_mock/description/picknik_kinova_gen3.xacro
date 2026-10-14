@@ -22,25 +22,28 @@
     <xacro:arg name="isaac_joint_commands" default="/isaac_joint_commands" />
     <xacro:arg name="isaac_joint_states" default="/isaac_joint_states" />
     <xacro:arg name="use_external_cable" default="false" />
-    <!-- Gripper selection, forwarded to ros2_kortex's load_arm. The boilerplate
-         mounts no gripper, so these default to empty and tool_frame stays at the
-         wrist flange.
-
-         WARNING: setting these alone does NOT mount a gripper. load_arm uses them
-         for the Kortex hardware block and to add the gripper joint to
-         <ros2_control>, but contributes no links and no kinematic joint, so a
-         config that sets only these produces a model whose <ros2_control> block
-         references a joint the kinematic model does not contain. A complete
-         gripper overlay also needs a gripper description include, a gripper
-         controller in the ros2_control manifest, and a gripper group in the SRDF.
-         See "Adding a Robotiq gripper" in the workspace README, and the
-         picknik_006_gen3 branch for a reference implementation. -->
-    <xacro:arg name="gripper" default="" />
-    <xacro:arg name="gripper_joint_name" default="" />
-    <xacro:arg name="use_internal_bus_gripper_comm" default="false" />
+    <!-- Gripper mounted on the wrist:
+           none           no gripper; tool_frame and grasp_link sit at the wrist flange
+           robotiq_2f_85  Robotiq 2F-85 on the Kinova internal bus, as Kinova sells it
+         The gripper joint name and internal-bus wiring follow from this choice.
+         Selecting a gripper also needs its controller activated; see "Robotiq
+         2F-85 gripper" in the workspace README. -->
+    <xacro:arg name="gripper" default="none" />
+    <xacro:property name="gripper" value="$(arg gripper)" />
+    <xacro:unless value="${gripper in ['none', 'robotiq_2f_85']}">
+      <xacro:element xacro:name="${xacro.fatal('gripper must be none or robotiq_2f_85, not ' + gripper)}"/>
+    </xacro:unless>
+    <!-- ros2_kortex's macros take an empty gripper name for "no gripper". -->
+    <xacro:property name="kortex_gripper" value="${'' if gripper == 'none' else gripper}" />
+    <xacro:property name="gripper_joint_name" value="${'robotiq_85_left_knuckle_joint' if gripper == 'robotiq_2f_85' else ''}" />
+    <xacro:property name="use_internal_bus_gripper_comm" value="${'true' if gripper == 'robotiq_2f_85' else 'false'}" />
     <!-- MuJoCo args, used only when hardware_interface is mujoco. The config that
          selects MuJoCo (kinova_gen3_sim) names its own scene package and file. -->
     <xacro:arg name="mujoco_model" default="" />
+    <!-- Scene simulated instead of mujoco_model when the Robotiq 2F-85 is
+         mounted, since the gripper adds bodies, joints and an actuator. -->
+    <xacro:arg name="mujoco_model_robotiq_2f_85" default="" />
+    <xacro:property name="mujoco_model" value="${xacro.arg('mujoco_model_robotiq_2f_85') if gripper == 'robotiq_2f_85' else xacro.arg('mujoco_model')}" />
     <xacro:arg name="mujoco_model_package" default="" />
     <xacro:arg name="mujoco_keyframe" default="" />
     <xacro:arg name="mujoco_viewer" default="false" />
@@ -78,33 +81,42 @@
         port_realtime="$(arg port_realtime)"
         session_inactivity_timeout_ms="$(arg session_inactivity_timeout_ms)"
         connection_inactivity_timeout_ms="$(arg connection_inactivity_timeout_ms)"
-        use_internal_bus_gripper_comm="$(arg use_internal_bus_gripper_comm)"
+        use_internal_bus_gripper_comm="${use_internal_bus_gripper_comm}"
         gripper_max_velocity="100.0"
         gripper_max_force="100.0"
-        gripper_joint_name="$(arg gripper_joint_name)"
-        gripper="$(arg gripper)"/>
+        gripper_joint_name="${gripper_joint_name}"
+        gripper="${kortex_gripper}"/>
     </xacro:if>
     <xacro:if value="${hardware_interface == 'mujoco'}">
+      <!-- MujocoSystem's startup check poses each URDF joint independently and
+           compares link frames without MuJoCo's equality constraints. The 2F-85's
+           four-bar linkage is closed by one, and its fingertips hang from a
+           different link in the MJCF than in the URDF, so off the constraint the
+           check reports mismatches the simulated gripper never has. Its joints
+           are left out of the check; kinova_gen3_sim's test_mujoco_models.py
+           compares the constrained gripper against the URDF instead. -->
+      <xacro:property name="mujoco_ignore_joint_validation" value="${'robotiq_85_left_knuckle_joint robotiq_85_right_knuckle_joint robotiq_85_left_inner_knuckle_joint robotiq_85_right_inner_knuckle_joint robotiq_85_left_finger_tip_joint robotiq_85_right_finger_tip_joint' if gripper == 'robotiq_2f_85' else ''}" />
       <xacro:include filename="$(find kinova_gen3_mock)/description/kinova_gen3_mujoco.ros2_control.xacro" />
       <xacro:kinova_gen3_mujoco_ros2_control
         name="$(arg prefix)KinovaGen3MujocoSystem"
-        mujoco_model="$(arg mujoco_model)"
+        mujoco_model="${mujoco_model}"
         mujoco_model_package="$(arg mujoco_model_package)"
         mujoco_keyframe="$(arg mujoco_keyframe)"
-        mujoco_viewer="$(arg mujoco_viewer)"/>
+        mujoco_viewer="$(arg mujoco_viewer)"
+        ignore_joint_validation="${mujoco_ignore_joint_validation}"/>
     </xacro:if>
     <xacro:unless value="${hardware_interface in ['mock', 'mujoco', 'physical']}">
       <xacro:element xacro:name="${xacro.fatal('hardware_interface must be mock, mujoco, or physical, not ' + hardware_interface)}"/>
     </xacro:unless>
 
-    <!-- Load the robot. No gripper is mounted by default; the Kinova-integrated
-         wrist Vision Module is enabled via vision="true". -->
+    <!-- Load the robot. The Kinova-integrated wrist Vision Module is enabled via
+         vision="true"; the gripper, if any, is loaded below. -->
     <xacro:load_robot
       parent="world"
       prefix="$(arg prefix)"
       arm="$(arg arm)"
-      gripper="$(arg gripper)"
-      gripper_joint_name="$(arg gripper_joint_name)"
+      gripper="${kortex_gripper}"
+      gripper_joint_name="${gripper_joint_name}"
       dof="$(arg dof)"
       vision="$(arg vision)"
       robot_ip="$(arg robot_ip)"
@@ -114,22 +126,49 @@
       port_realtime="$(arg port_realtime)"
       session_inactivity_timeout_ms="$(arg session_inactivity_timeout_ms)"
       connection_inactivity_timeout_ms="$(arg connection_inactivity_timeout_ms)"
-      use_internal_bus_gripper_comm="$(arg use_internal_bus_gripper_comm)"
+      use_internal_bus_gripper_comm="${use_internal_bus_gripper_comm}"
       use_external_cable="$(arg use_external_cable)"
       initial_positions="${xacro.load_yaml(initial_positions_file)}"
       include_ros2_control="false" >
       <origin xyz="0 0 0.0" rpy="0 0 0" />
     </xacro:load_robot>
 
-    <!-- Convenience alias for motion-planning-relevant tool point. The
-         kortex_robot macro defines $(prefix)tool_frame at the wrist when no
-         gripper is mounted; we expose it as grasp_link so existing config files
-         (control, jtac, etc.) keep working when a gripper is added later. -->
+    <!-- Robotiq 2F-85 on the wrist flange. robotiq_description's own macro is
+         used rather than kortex_description's load_gripper wrapper, which passes a
+         sim_ignition argument the pinned robotiq_description no longer accepts.
+         Only mock hardware gets the gripper's own <ros2_control> block (mock
+         components). On the real arm the gripper joint is part of the Kortex
+         hardware block above (internal bus), and MuJoCo simulates it from the
+         gripper scene the MuJoCo block loads. -->
+    <xacro:if value="${gripper == 'robotiq_2f_85'}">
+      <xacro:include filename="$(find robotiq_description)/urdf/robotiq_2f_85_macro.urdf.xacro" />
+      <xacro:robotiq_gripper
+        name="RobotiqGripperHardwareInterface"
+        prefix="$(arg prefix)"
+        parent="$(arg prefix)end_effector_link"
+        include_ros2_control="${hardware_interface == 'mock'}"
+        use_fake_hardware="${hardware_interface == 'mock'}"
+        mock_sensor_commands="$(arg fake_sensor_commands)">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+      </xacro:robotiq_gripper>
+    </xacro:if>
+
+    <!-- grasp_link is the motion-planning tool point that the control, JTAC and
+         SRDF configuration name. With no gripper it is tool_frame at the wrist
+         flange; with the 2F-85 it is between the fingertips, 0.15 m out from the
+         gripper base. -->
     <link name="$(arg prefix)grasp_link"/>
     <joint name="$(arg prefix)grasp_link_joint" type="fixed">
-      <parent link="$(arg prefix)tool_frame"/>
-      <child link="$(arg prefix)grasp_link"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <xacro:if value="${gripper == 'none'}">
+        <parent link="$(arg prefix)tool_frame"/>
+        <child link="$(arg prefix)grasp_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:if>
+      <xacro:if value="${gripper == 'robotiq_2f_85'}">
+        <parent link="$(arg prefix)robotiq_85_base_link"/>
+        <child link="$(arg prefix)grasp_link"/>
+        <origin xyz="0 0 0.15" rpy="0 0 0"/>
+      </xacro:if>
     </joint>
 
 </robot>
