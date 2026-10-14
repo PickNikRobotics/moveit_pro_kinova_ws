@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+  Copied from PickNikRobotics/ros2_kortex (branch main-picknik, commit 732b96f),
+  kortex_description/grippers/robotiq_2f_85/urdf/robotiq_2f_85_macro.xacro.
+  Copyright (c) 2018, Kinova inc. BSD-3-Clause; see ../../../LICENSE.
+
+  Modified by PickNik Robotics, 2026: Replaced the use_fake_hardware, sim_gazebo, and sim_isaac flags with a hardware_interface selector, and removed the Gazebo and Isaac options.
+-->
+<robot name="robotiq_2f_85_model" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="load_gripper" params="
+    parent
+    prefix
+    hardware_interface:=mock
+    use_internal_bus_gripper_comm:=false
+    fake_sensor_commands:=false">
+    <xacro:include filename="$(find robotiq_description)/urdf/robotiq_2f_85_macro.urdf.xacro" />
+
+    <xacro:robotiq_gripper
+        name="RobotiqGripperHardwareInterface"
+        prefix="${prefix}"
+        parent="${parent}"
+        include_ros2_control="${not use_internal_bus_gripper_comm}"
+        com_port="/dev/ttyUSB0"
+        use_fake_hardware="${hardware_interface != 'kortex'}"
+        fake_sensor_commands="${fake_sensor_commands}">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+    </xacro:robotiq_gripper>
+  </xacro:macro>
+</robot>
