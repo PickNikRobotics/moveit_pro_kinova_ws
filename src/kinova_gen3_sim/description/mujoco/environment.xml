@@ -1,8 +1,8 @@
 <mujoco model="kinova_gen3 environment">
   <!--
-    The table and floor shared by scene.xml and scene_robotiq_2f_85.xml, matching
-    kinova_gen3_mock's URDF: base_link at the world origin and a 2.0 x 2.0 x 0.25 m
-    table whose top sits 0.045 m below it.
+    The floor, lighting and camera shared by scene.xml and scene_robotiq_2f_85.xml.
+    base_link sits at the world origin on the floor, which is the arm's mounting
+    surface; the URDF models no environment, so neither does this beyond the floor.
   -->
   <statistic center="0.3 0 0.4" extent="1" />
 
@@ -43,24 +43,16 @@
       texrepeat="5 5"
       reflectance="0.2"
     />
-    <material name="table" rgba="0.8 0.8 0.8 0.3" />
   </asset>
 
   <worldbody>
     <light pos="0 0 1.5" dir="0 0 -1" directional="true" />
     <geom
       name="floor"
-      pos="0 0 -0.295"
+      pos="0 0 0"
       size="0 0 0.05"
       type="plane"
       material="groundplane"
-    />
-    <geom
-      name="table"
-      type="box"
-      pos="0 0 -0.17"
-      size="1.0 1.0 0.125"
-      material="table"
     />
     <camera
       name="scene_camera"

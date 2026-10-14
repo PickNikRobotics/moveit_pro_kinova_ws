@@ -51,10 +51,7 @@
     <!-- Import macros for main hardware components -->
     <xacro:include filename="$(find kinova_gen3_mock)/description/kortex_robot.xacro" />
 
-    <!-- Import environment macros -->
-    <xacro:include filename="$(find picknik_accessories)/descriptions/geometry/cube.urdf.xacro"/>
-
-    <!-- World is centered under base_link of the robot, on the ground -->
+    <!-- World is centered under base_link of the robot, on its mounting surface -->
     <link name="world"/>
 
     <!-- initial position for simulations (Mock Hardware, Gazebo, Ignition) -->
@@ -135,15 +132,6 @@
       include_ros2_control="false" >
       <origin xyz="0 0 0.0" rpy="0 0 0" />
     </xacro:load_robot>
-
-    <!-- Environment -->
-    <!-- The table top must stay clear of base_link by more than the collision
-         padding applied to both, or a fresh checkout reports "start state in
-         collision" with no obvious cause. At z = -0.17 the 0.25 m cube's top sits
-         at -0.045, leaving 4.5 cm against a default link_padding of 0.01. -->
-    <xacro:cube link_name="table" connected_to="world" length="2.00" width="2.00" height="0.25" alpha="0.3">
-      <origin xyz="0 0 -0.17" rpy="0 0 0"/>
-    </xacro:cube>
 
     <!-- Robotiq 2F-85 on the wrist flange. robotiq_description's own macro is
          used rather than kortex_description's load_gripper wrapper, which passes a

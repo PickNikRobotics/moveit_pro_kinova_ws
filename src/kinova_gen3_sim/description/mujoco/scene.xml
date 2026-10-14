@@ -1,5 +1,5 @@
 <mujoco model="kinova_gen3 scene">
-  <!-- Kinova Gen3 7DoF on a table, with no gripper. -->
+  <!-- Kinova Gen3 7DoF on the floor, with no gripper. -->
   <include file="gen3_7dof.xml" />
   <include file="environment.xml" />
 

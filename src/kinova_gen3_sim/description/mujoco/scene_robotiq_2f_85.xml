@@ -1,6 +1,6 @@
 <mujoco model="kinova_gen3_robotiq_2f_85 scene">
   <!--
-    Kinova Gen3 7DoF with the Robotiq 2F-85 on a table. Selected by
+    Kinova Gen3 7DoF with the Robotiq 2F-85, on the floor. Selected by
     kinova_gen3_sim when the gripper urdf_param is robotiq_2f_85.
   -->
   <include file="gen3_7dof_robotiq_2f_85.xml" />

@@ -92,7 +92,7 @@ def test_scene_holds_its_default_keyframe(scene, gripper_actuators):
         mujoco.mj_step(model, data)
     end = np.array([data.joint(f"joint_{i}").qpos[0] for i in range(1, 8)])
     np.testing.assert_allclose(end, start, atol=1e-3)
-    assert data.ncon == 0, "the arm touches the table or itself at its keyframe"
+    assert data.ncon == 0, "the arm touches the floor or itself at its keyframe"
 
 
 def _urdf_joints(urdf: ET.Element) -> dict[str, dict]:
