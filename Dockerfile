@@ -83,6 +83,16 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       --from-paths src \
       --ignore-src
 
+# H.264 decoder (avdec_h264) for the Kinova wrist camera's color stream, which
+# kinova_vision decodes; the base image ships the other GStreamer elements it
+# uses. The camera is opt-in: see kinova_gen3_hw/launch/runtime.launch.xml.
+# Unpinned because Ubuntu's updates pocket keeps only the newest patch.
+# hadolint ignore=DL3008
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
+    apt-get install -q -y --no-install-recommends gstreamer1.0-libav
+
 # Set up colcon defaults for the new user
 USER ${USERNAME}
 RUN colcon mixin add default \
